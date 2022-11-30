@@ -4,12 +4,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "final-project"
-description = ''
+description = 'APC524 final project of Jalal Butt, Gabriel Mantegna and Manuel Kreutle'
 readme = "README.md"
 requires-python = ">=3.7"
 license = "MIT"
-keywords = []
+keywords = [Energy grid, Resilience, Optimization]
 authors = [
+  { name = "jalalbutt", email = "jb108@princeton.edu" },
+  { name = "manuel-k2", email = "kreutle@princeton.edu" },
   { name = "manuel-k2", email = "kreutle@princeton.edu" },
 ]
 classifiers = [
@@ -59,3 +61,24 @@ exclude_lines = [
   "if __name__ == .__main__.:",
   "if TYPE_CHECKING:",
 ]
+
+[project.optional-dependencies]
+tests = [
+  'coverage>=5.0.3',
+  'pytest',
+  'pytest-benchmark[histogram]>=3.2.1',
+]
+docs = [
+    "furo",  # Theme
+    "myst_parser >=0.13",  # Markdown
+    "sphinx >=4.0",
+    "sphinx_copybutton",  # Easy code copy button
+]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = ["-ra", "--strict-markers", "--strict-config"]
+xfail_strict = true
+filterwarnings = ["error"]
+log_cli_level = "info"
+testpaths = ["tests"]
