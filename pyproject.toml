@@ -11,7 +11,7 @@ license = "MIT"
 keywords = [Energy grid, Resilience, Optimization]
 authors = [
   { name = "jalalbutt", email = "jb108@princeton.edu" },
-  { name = "manuel-k2", email = "kreutle@princeton.edu" },
+  { name = "jmantegna", email = "gabriel.mantegna@gmail.com" },
   { name = "manuel-k2", email = "kreutle@princeton.edu" },
 ]
 classifiers = [
