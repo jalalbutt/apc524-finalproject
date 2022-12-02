@@ -8,7 +8,6 @@ description = 'APC524 final project of Jalal Butt, Gabriel Mantegna and Manuel K
 readme = "README.md"
 requires-python = ">=3.7"
 license = "MIT"
-keywords = [Energy grid, Resilience, Optimization]
 authors = [
   { name = "jalalbutt", email = "jb108@princeton.edu" },
   { name = "jmantegna", email = "gabriel.mantegna@gmail.com" },

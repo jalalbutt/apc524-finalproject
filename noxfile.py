@@ -2,6 +2,7 @@ import nox
 
 nox.options.sessions = ["lint", "tests"]
 
+
 @nox.session
 def tests(session: nox.Session) -> None:
     """
