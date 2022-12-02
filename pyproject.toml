@@ -62,13 +62,15 @@ exclude_lines = [
 ]
 
 [project.optional-dependencies]
-tests = [
-  'coverage>=5.0.3',
-  'pytest',
-  'pytest-benchmark[histogram]>=3.2.1',
+test = [
+  "pytest >= 6.0.0",
+  "uncertainties >= 3.1.7"
 ]
 
 [tool.pytest.ini_options]
+pythonpath = [
+  "src"
+]
 minversion = "6.0"
 addopts = ["-ra", "--strict-markers", "--strict-config"]
 xfail_strict = true

@@ -1,7 +1,5 @@
 import nox
 
-nox.options.sessions = ["tests", "docs", "serve"]
-
 
 @nox.session
 def tests(session: nox.Session) -> None:
