@@ -66,6 +66,12 @@ test = [
   "pytest >= 6.0.0",
   "uncertainties >= 3.1.7"
 ]
+docs = [
+    "furo",  # Theme
+    "myst_parser >=0.13",  # Markdown
+    "sphinx >=4.0",
+    "sphinx_copybutton",  # Easy code copy button
+]
 
 [tool.pytest.ini_options]
 pythonpath = [

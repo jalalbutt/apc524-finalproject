@@ -9,6 +9,18 @@ Self = TypeVar("Self", bound="LabUnc")
 class LabUnc:
     @staticmethod
     def combine(a: float, b: float) -> float:
+        """
+        Computes a+b.
+
+        :param a: The input value.
+        :param b: The input value.
+        :return: sum of a and b, often called y.
+
+        Usage::
+
+            >>> a = 1, b = 2
+            >>> y = 3
+        """
         return a + b
 
     rounding_rule = 1.0
