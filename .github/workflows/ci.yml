@@ -46,7 +46,7 @@ jobs:
     steps:
       - name: Setup Pages
         id: pages
-        uses: actions/configure-pages@v2.1.1
+        uses: actions/configure-pages@v2
 
       - name: build output
         run: pipx run nox -s docs
