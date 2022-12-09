@@ -1,3 +1,9 @@
+"""
+__init__.py
+====================================
+The core module of my example project
+"""
+
 from __future__ import annotations
 
 import math
@@ -7,6 +13,8 @@ Self = TypeVar("Self", bound="LabUnc")
 
 
 class LabUnc:
+    """An example docstring for a class definition."""
+
     @staticmethod
     def combine(a: float, b: float) -> float:
         """
