@@ -19,7 +19,7 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-This is a documentation.
+This is a documentation..
 
 .. automodule:: final_project.__init__
     :members:
