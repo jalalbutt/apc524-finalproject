@@ -55,6 +55,7 @@ jobs:
 
       - name: build output
         run: python -m nox -s docs
+        run: ls docs/build/html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
