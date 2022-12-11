@@ -8,6 +8,7 @@
 **Table of Contents**
 
 - [Installation](#installation)
+- [Documentation](#documentation)
 - [License](#license)
 
 ## Installation
@@ -15,6 +16,9 @@
 ```console
 pip install final-project
 ```
+## Documentation
+
+https://jalalbutt.github.io/apc524-finalproject/
 
 ## License
 
