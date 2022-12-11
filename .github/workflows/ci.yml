@@ -73,7 +73,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: show build folder
-        run: ls docs/build/ && ls docs/build/html
+        run: ls docs/build/html
 
       - name: Deploy to GitHub Pages
         id: deployment
