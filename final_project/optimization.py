@@ -11,7 +11,7 @@ import typing
 
 
 class OptimizedNetwork:
-    """The class defining the optimized network."""
+    """The class defining the optimization problem for the network."""
 
     def __init__(
         self,
