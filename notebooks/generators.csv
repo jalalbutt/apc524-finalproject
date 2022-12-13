@@ -1,4 +1,0 @@
-name,node_p,node_g,is_gas,min_cap_mw,max_cap_mw,fuel_cost,efficiency
-coal,0,0,False,0,100,5,5
-gas,1,1,True,0,200,10,5
-pv,2,2,False,0,50,50,5

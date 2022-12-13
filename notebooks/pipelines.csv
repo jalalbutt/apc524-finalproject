@@ -1,4 +1,0 @@
-from_node,to_node,capacity_ej,cost
-0,1,100,5
-1,2,100,5
-2,0,100,5
