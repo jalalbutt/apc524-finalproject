@@ -1,6 +1,6 @@
 """
 optimization.py
-
+---------------
 The optimization module of the project
 """
 
