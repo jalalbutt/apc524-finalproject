@@ -23,3 +23,4 @@ Modules
 -------
 
 .. automodule:: final_project.optimization
+    :members:
