@@ -10,10 +10,31 @@ Jalal Butt, Gabriel Mantegna, Manuel Kreutle
 
 **Table of Contents**
 
+- [Results](#results)
 - [Documentation](#documentation)
 - [License](#license)
 
+## Results
+
+The results were visualized with Dash and can be found online under:
+
+https://manuelk.pythonanywhere.com/
+
+### Local display
+
+If you want to display the Dash app locally, make sure you have all required packages installed:
+
+`pip install -r final-project/dash/requirements.txt`
+
+Run the Dash app:
+
+`python3 final-project/dash/app.py`
+
+Results are then visible with a browser via http://127.0.0.1:8050/.
+
 ## Documentation
+
+The project documentation was created with Sphynx and deployed with Github Pages. It can be found under:
 
 https://jalalbutt.github.io/apc524-finalproject/
 
