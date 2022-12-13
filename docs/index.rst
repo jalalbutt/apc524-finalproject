@@ -21,5 +21,5 @@ Indices and tables
 
 This is a documentation..
 
-.. automodule:: final_project.__init__
+.. automodule:: final_project.optimization
     :members:
