@@ -16,9 +16,13 @@ Jalal Butt, Gabriel Mantegna, Manuel Kreutle
 
 ## Results
 
-The results were visualized with Dash and can be displayed locally.
+The results were visualized with Dash and can be found online under:
 
-Make sure you have all required packages installed:
+http://manuelk.pythonanywhere.com/
+
+### Local display
+
+If you want to display the Dash app locally, make sure you have all required packages installed:
 
 `pip install -r final-project/dash/requirements.txt`
 
