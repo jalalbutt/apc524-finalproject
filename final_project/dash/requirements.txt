@@ -1,0 +1,6 @@
+dash
+pandas
+matplotlib
+gunicorn
+dash-bootstrap-components
+whitenoise
