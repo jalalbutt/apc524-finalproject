@@ -18,7 +18,7 @@ Jalal Butt, Gabriel Mantegna, Manuel Kreutle
 
 The results were visualized with Dash and can be found online under:
 
-http://manuelk.pythonanywhere.com/
+https://manuelk.pythonanywhere.com/
 
 ### Local display
 
