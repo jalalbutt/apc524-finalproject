@@ -1,0 +1,4 @@
+from_node,to_node,reactance_pu,capacity_mw
+0,1,0.3,500
+1,2,0.3,500
+2,0,0.3,500
