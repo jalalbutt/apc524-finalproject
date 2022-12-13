@@ -1,3 +1,9 @@
+"""
+optimization.py
+
+The optimization module of the project
+"""
+
 import numpy as np
 import cvxpy as cp
 import pandas as pd
@@ -5,6 +11,8 @@ import typing
 
 
 class OptimizedNetwork:
+    """The class defining the optimized network."""
+
     def __init__(
         self,
         A_p: np.ndarray,
