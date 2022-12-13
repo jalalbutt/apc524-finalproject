@@ -24,7 +24,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = []
+dependencies = ["numpy","cvxpy","pandas"]
 dynamic = ["version"]
 
 [project.urls]

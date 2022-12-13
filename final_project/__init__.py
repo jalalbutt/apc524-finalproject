@@ -4,7 +4,7 @@
 
 """
 __init__.py
-====================================
+
 The core module of my example project
 """
 
