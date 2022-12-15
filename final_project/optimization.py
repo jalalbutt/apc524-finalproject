@@ -83,7 +83,7 @@ class OptimizedNetwork:
     out_flow_g: typing.optional(pd.Series) = None
 
     # summary of NSE and flows
-    out_energy_and_Flows: typing.optional(dict) = None
+    out_energy_and_flows: typing.optional(dict) = None
 
     # generation by generator
     out_generation: typing.optional(pd.Series) = None

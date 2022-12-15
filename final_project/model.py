@@ -1,16 +1,102 @@
 import numpy as np
 import pandas as pd
 import xarray as xr
+from dataclasses import dataclass
+import typing
+import optimization
+import perturb  # does not exist yet
 
 
+@dataclass
 class NetworkModel:
-    """_summary_"""
+    """
+    A class which holds data for a coupled PDE-optimization model,
+    and which runs the simulation.
+    """
 
-    def __init__(self, array_PDE, latlon_start):
-        self.x = np.zeros(4)
+    # optimization inputs before perturbation
+    A_p: np.ndarray
+    A_g: np.ndarray
+    generators: pd.DataFrame
+    lines: pd.DataFrame
+    load: pd.DataFrame
+    gas_supply: pd.DataFrame
+    gas_demand: pd.DataFrame
+    pipelines: pd.DataFrame
+
+    # coordinates of nodes on power and gas networks
+    nodes_p: pd.DataFrame
+    nodes_g: pd.DataFrame
+
+    # times at which to run the optimization, after initialization
+    times_opt: list
+
+    # PDE params
+    array_PDE: xr.DataArray
+    latlon_start: list
+    timesteps: list  # could be in a different form
+    # add other PDE params
+
+    # default inputs that are not likely to change
+    p_hat_mw: float = 100
+    voltage_angle_cap_radians: float = 2 * np.pi
+    slack_node_index: int = 0
+    nse_cost: float = 1000
+
+    # outputs- not meant to be inputted
+    out_array_result: typing.optional(xr.DataArray) = None
+    out_opt_result: typing.optional(dict) = None
+
+    def __post_init__(self):
+        """
+        Run initial optimization before perturbation
+        Note this will conveniently also run the validation steps
+        from OptimizedNetwork so we don't have to repeat them here.
+        """
+        network_init = optimization.OptimizedNetwork(
+            self.A_p,
+            self.A_g,
+            self.generators,
+            self.lines,
+            self.load,
+            self.gas_supply,
+            self.gas_demand,
+            self.pipelines,
+            self.p_hat_mw,
+            self.voltage_angle_cap_radians,
+            self.slack_node_index,
+            self.nse_cost,
+        )
+
+        network_init.optimize()
+
+        self.out_opt_result[0] = network_init.out_energy_and_flows
 
     def run_simulation(self):
-        ...
+        """
+        Run the PDE perturbation simulation, translate the results
+        into their impact on the optimization, and then run the
+        optimization for the desired time steps.
+        """
+
+        PDE_input_array = self.array_PDE.values
+
+        # get coordinate closest to latlon_start
+        coordinate_start = [5, 5]
+
+        PDE_model = perturb.Model(
+            PDE_input_array, coordinate_start, self.timesteps
+        )
+
+        PDE_model.simulate()
+
+        PDE_output_array = PDE_model.out_array
+
+        # create out_array_result by adding coordinates
+        self.out_array_result = xr.DataArray(PDE_output_array)
+
+        # at desired timesteps of out_array_result, calculate impact on
+        # optimization inputs, and run optimization
 
 
 def test_network_model():
@@ -79,11 +165,28 @@ def test_network_model():
 
     # params for PDE go here
     # start of the disturbance
+    times_opt = [1, 2, 3, 4, 5]
     latlon_start = [45, 85]
+    timesteps = [0, 1, 2, 3, 4, 5]
     # other stuff- time, params, etc
 
     # initialize model
-    model = NetworkModel(array_PDE, latlon_start)
+    model = NetworkModel(
+        A_p,
+        A_g,
+        generators,
+        lines,
+        load,
+        gas_supply,
+        gas_demand,
+        pipelines,
+        nodes_p,
+        nodes_g,
+        times_opt,
+        array_PDE,
+        latlon_start,
+        timesteps,
+    )
     model.run_simulation()
 
     # fake results that show what the format should be
