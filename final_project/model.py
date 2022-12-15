@@ -2,9 +2,11 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from dataclasses import dataclass
-import typing
+
+# import typing
 import optimization
-import perturb  # does not exist yet
+
+# import perturb  # does not exist yet
 
 
 @dataclass
@@ -43,9 +45,9 @@ class NetworkModel:
     slack_node_index: int = 0
     nse_cost: float = 1000
 
-    # outputs- not meant to be inputted
-    out_array_result: typing.optional(xr.DataArray) = None
-    out_opt_result: typing.optional(dict) = None
+    # # outputs- not meant to be inputted
+    # out_array_result: typing.optional(xr.DataArray) = None
+    # out_opt_result: typing.optional(dict) = None
 
     def __post_init__(self):
         """
@@ -70,6 +72,7 @@ class NetworkModel:
 
         network_init.optimize()
 
+        self.out_opt_result = {}
         self.out_opt_result[0] = network_init.out_energy_and_flows
 
     def run_simulation(self):
@@ -79,24 +82,24 @@ class NetworkModel:
         optimization for the desired time steps.
         """
 
-        PDE_input_array = self.array_PDE.values
+        # PDE_input_array = self.array_PDE.values
 
-        # get coordinate closest to latlon_start
-        coordinate_start = [5, 5]
+        # # get coordinate closest to latlon_start
+        # coordinate_start = [5, 5]
 
-        PDE_model = perturb.Model(
-            PDE_input_array, coordinate_start, self.timesteps
-        )
+        # PDE_model = perturb.Model(
+        #     PDE_input_array, coordinate_start, self.timesteps
+        # )
 
-        PDE_model.simulate()
+        # PDE_model.simulate()
 
-        PDE_output_array = PDE_model.out_array
+        # PDE_output_array = PDE_model.out_array
 
-        # create out_array_result by adding coordinates
-        self.out_array_result = xr.DataArray(PDE_output_array)
+        # # create out_array_result by adding coordinates
+        # self.out_array_result = xr.DataArray(PDE_output_array)
 
-        # at desired timesteps of out_array_result, calculate impact on
-        # optimization inputs, and run optimization
+        # # at desired timesteps of out_array_result, calculate impact on
+        # # optimization inputs, and run optimization
 
 
 def test_network_model():
@@ -206,12 +209,12 @@ def test_network_model():
         ),
         "flow_power": pd.Series(
             [5, 6, 7],
-            index=pd.Index([0, 1, 2], name="node"),
+            index=pd.Index([0, 1, 2], name="edge"),
             name="Power flow by line (MW)",
         ),
         "flow_gas": pd.Series(
             [5, 6, 7],
-            index=pd.Index([0, 1, 2], name="node"),
+            index=pd.Index([0, 1, 2], name="edge"),
             name="Power flow by line (MW)",
         ),
     }
@@ -225,3 +228,9 @@ def test_network_model():
     # on power network) nodes_p and nodes_g: DFs with coordinates of the
     # nodes for the gas and power network (fine to focus on power network)
     return array_result, opt_result, A_p, A_g, nodes_p, nodes_g
+
+
+if __name__ == "__main__":
+    array_result, opt_result, A_p, A_g, nodes_p, nodes_g = test_network_model()
+
+    print("")

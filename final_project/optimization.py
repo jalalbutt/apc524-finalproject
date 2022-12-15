@@ -7,7 +7,8 @@ The optimization module of the project
 import numpy as np
 import cvxpy as cp
 import pandas as pd
-import typing
+
+# import typing
 from dataclasses import dataclass
 
 
@@ -64,35 +65,35 @@ class OptimizedNetwork:
 
     # output variables-- recorded after optimization
 
-    # solver status
-    out_status: typing.optional(str) = None
+    # # solver status
+    # out_status: typing.Optional(str) = None
 
-    # objective function value
-    out_ofv: typing.optional(float) = None
+    # # objective function value
+    # out_ofv: typing.Optional(float) = None
 
-    # non served energy for power
-    out_nse_power: typing.optional(pd.Series) = None
+    # # non served energy for power
+    # out_nse_power: typing.Optional(pd.Series) = None
 
-    # non served energy for gas
-    out_nse_gas: typing.optional(pd.Series) = None
+    # # non served energy for gas
+    # out_nse_gas: typing.Optional(pd.Series) = None
 
-    # flow on power lines
-    out_flow_p: typing.optional(pd.Series) = None
+    # # flow on power lines
+    # out_flow_p: typing.Optional(pd.Series) = None
 
-    # flow on gas lines
-    out_flow_g: typing.optional(pd.Series) = None
+    # # flow on gas lines
+    # out_flow_g: typing.Optional(pd.Series) = None
 
-    # summary of NSE and flows
-    out_energy_and_flows: typing.optional(dict) = None
+    # # summary of NSE and flows
+    # out_energy_and_flows: typing.Optional(dict) = None
 
-    # generation by generator
-    out_generation: typing.optional(pd.Series) = None
+    # # generation by generator
+    # out_generation: typing.Optional(pd.Series) = None
 
-    # gas supply
-    out_gas_supply: typing.optional(pd.Series) = None
+    # # gas supply
+    # out_gas_supply: typing.Optional(pd.Series) = None
 
-    # full problem for debugging purposes
-    out_prob = None
+    # # full problem for debugging purposes
+    # out_prob = None
 
     def __post_init__(self):
         """
@@ -295,7 +296,7 @@ class OptimizedNetwork:
         self.out_nse_gas = pd.DataFrame(
             {
                 "non_served_energy": slack_g.value,
-                "load": self.gas_demand.demand.demand_gj.values,
+                "load": self.gas_demand.demand_gj.values,
             },
             index=pd.Index(nodes_g, name="node"),
         )
