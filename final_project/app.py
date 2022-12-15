@@ -1,3 +1,9 @@
+"""
+app.py
+------
+The dash app of the project
+"""
+
 from dash import Dash, dcc, html, Input, Output
 import plotly.express as px
 import plotly.graph_objects as go
@@ -5,8 +11,21 @@ import pandas as pd
 import random
 import networkx as nx
 
+# import model to generate project data
+import model
+
+(
+    array_result,
+    opt_result,
+    A_p,
+    A_g,
+    nodes_p,
+    nodes_g,
+) = model.test_network_model()
+
 timesteps = pd.Series(range(5))
 
+# dummy data
 df_density = pd.read_csv(
     "https://raw.githubusercontent.com/plotly/"
     "datasets/master/earthquakes-23k.csv"
@@ -16,6 +35,7 @@ us_cities = pd.read_csv(
     "datasets/master/us-cities-top-1k.csv"
 )
 
+# dummy network
 g = nx.Graph()
 g.add_nodes_from(us_cities["City"].tolist())
 
@@ -46,6 +66,9 @@ app.layout = html.Div(
 
 @app.callback(Output(gws, "figure"), Input("year-slider", "value"))
 def update_figure(selected_year):
+    """
+    Updates figure based on user input.
+    """
     # filtered_df = df[df.year == selected_year]
 
     fig = px.density_mapbox(
