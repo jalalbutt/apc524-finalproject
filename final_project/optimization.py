@@ -7,60 +7,100 @@ The optimization module of the project
 import numpy as np
 import cvxpy as cp
 import pandas as pd
-import typing
+
+# import typing
+from dataclasses import dataclass
 
 
+@dataclass
 class OptimizedNetwork:
-    """The class defining the optimization problem for the network."""
+    """
+    The class defining the optimization problem for the network.
+    Set up as a dataclass, with additional methods.
 
-    def __init__(
-        self,
-        A_p: np.ndarray,
-        A_g: np.ndarray,
-        generators: pd.DataFrame,
-        lines: pd.DataFrame,
-        load: pd.DataFrame,
-        gas_supply: pd.DataFrame,
-        gas_demand: pd.DataFrame,
-        pipelines: pd.DataFrame,
-        p_hat_mw: float = 100,
-        voltage_angle_cap_radians: float = 2 * np.pi,
-        slack_node_index: int = 0,
-        nse_cost: float = 1000,
-    ):
+    Args:
+        A_p (np.ndarray): Edge-node incidence matrix for power network.
+            Rows are nodes, columns are edges.
+        A_g (np.ndarray): Edge-node incidence matrix for gas network.
+            Rows are nodes, columns are edges.
+        generators (pd.DataFrame): Pandas DF with electric generator
+            characteristics. Columns specified in assert statements.
+        lines (pd.DataFrame): Pandas DF with electric transmission line
+            (edge) characteristics. Columns specified in assert
+            statements.
+        load (pd.DataFrame): Pandas DF with load characteristics. Columns
+            specified in assert statements.
+        gas_supply (pd.DataFrame): Pandas DF with gas supply
+            characteristics. Columns specified in assert statements.
+        gas_demand (pd.DataFrame): Pandas DF with gas demand
+            characteristics. Columns specified in assert statements.
+        pipelines (pd.DataFrame): Pandas DF with gas pipeline
+            characteristics. Columns specified in assert statements.
+        p_hat_mw (float, optional): System base power (MW). Defaults to
+            100.
+        voltage_angle_cap_radians (float, optional): Maximum voltage angle
+            difference in radians. Defaults to 2*np.pi.
+        slack_node_index (int, optional): Index of slack node
+            (zero-indexed). Defaults to 0.
+        nse_cost (float, optional): Cost of non-served energy. Defaults to
+            1000.
+
+    There are also output variables that are initialized as part of the
+    dataclass, but are not meant to be inputted.
+
+    """
+
+    A_p: np.ndarray
+    A_g: np.ndarray
+    generators: pd.DataFrame
+    lines: pd.DataFrame
+    load: pd.DataFrame
+    gas_supply: pd.DataFrame
+    gas_demand: pd.DataFrame
+    pipelines: pd.DataFrame
+    p_hat_mw: float = 100
+    voltage_angle_cap_radians: float = 2 * np.pi
+    slack_node_index: int = 0
+    nse_cost: float = 1000
+
+    # output variables-- recorded after optimization
+
+    # # solver status
+    # out_status: typing.Optional(str) = None
+
+    # # objective function value
+    # out_ofv: typing.Optional(float) = None
+
+    # # non served energy for power
+    # out_nse_power: typing.Optional(pd.Series) = None
+
+    # # non served energy for gas
+    # out_nse_gas: typing.Optional(pd.Series) = None
+
+    # # flow on power lines
+    # out_flow_p: typing.Optional(pd.Series) = None
+
+    # # flow on gas lines
+    # out_flow_g: typing.Optional(pd.Series) = None
+
+    # # summary of NSE and flows
+    # out_energy_and_flows: typing.Optional(dict) = None
+
+    # # generation by generator
+    # out_generation: typing.Optional(pd.Series) = None
+
+    # # gas supply
+    # out_gas_supply: typing.Optional(pd.Series) = None
+
+    # # full problem for debugging purposes
+    # out_prob = None
+
+    def __post_init__(self):
         """
-
-        Initialize OptimizedNetwork with data and validate that inputs are
-            in the correct form.
-
-        Args:
-            A_p (np.ndarray): Edge-node incidence matrix for power network.
-                Rows are nodes, columns are edges.
-            A_g (np.ndarray): Edge-node incidence matrix for gas network.
-                Rows are nodes, columns are edges.
-            generators (pd.DataFrame): Pandas DF with electric generator
-                characteristics. Columns specified in assert statements.
-            lines (pd.DataFrame): Pandas DF with electric transmission line
-                (edge) characteristics. Columns specified in assert
-                statements.
-            load (pd.DataFrame): Pandas DF with load characteristics. Columns
-                specified in assert statements.
-            gas_supply (pd.DataFrame): Pandas DF with gas supply
-                characteristics. Columns specified in assert statements.
-            gas_demand (pd.DataFrame): Pandas DF with gas demand
-                characteristics. Columns specified in assert statements.
-            pipelines (pd.DataFrame): Pandas DF with gas pipeline
-                characteristics. Columns specified in assert statements.
-            p_hat_mw (float, optional): System base power (MW). Defaults to
-                100.
-            voltage_angle_cap_radians (float, optional): Maximum voltage angle
-                difference in radians. Defaults to 2*np.pi.
-            slack_node_index (int, optional): Index of slack node
-                (zero-indexed). Defaults to 0.
-            nse_cost (float, optional): Cost of non-served energy. Defaults to
-                1000.
+        Assert that inputs are in the correct form so that the optimization
+        will run.
         """
-        assert list(generators.columns) == [
+        assert list(self.generators.columns) == [
             "name",
             "node_p",
             "node_g",
@@ -70,72 +110,30 @@ class OptimizedNetwork:
             "fuel_cost_dollars_per_mwh",
             "efficiency_gj_in_per_mwh_out",
         ]
-        assert list(lines.columns) == [
+        assert list(self.lines.columns) == [
             "from_node",
             "to_node",
             "reactance_pu",
             "capacity_mw",
         ]
-        assert list(load.columns) == ["node", "load_mw"]
-        assert list(gas_supply.columns) == ["node_g", "supply_gj"]
-        assert list(gas_demand.columns) == ["node_g", "demand_gj"]
-        assert list(pipelines.columns) == [
+        assert list(self.load.columns) == ["node", "load_mw"]
+        assert list(self.gas_supply.columns) == ["node_g", "supply_gj"]
+        assert list(self.gas_demand.columns) == ["node_g", "demand_gj"]
+        assert list(self.pipelines.columns) == [
             "from_node",
             "to_node",
             "capacity_gj",
             "cost",
         ]
-        assert load.shape[0] == A_p.shape[0]
-        assert lines.shape[0] == A_p.shape[1]
-        assert gas_supply.shape[0] == A_g.shape[0]
-        assert gas_demand.shape[0] == A_g.shape[0]
-        assert pipelines.shape[0] == A_g.shape[1]
-
-        self.A_p = A_p
-        self.A_g = A_g
-        self.generators = generators
-        self.lines = lines
-        self.load = load
-        self.gas_supply = gas_supply
-        self.gas_demand = gas_demand
-        self.pipelines = pipelines
-        self.p_hat_mw = p_hat_mw
-        self.voltage_angle_cap_radians = voltage_angle_cap_radians
-        self.slack_node_index = slack_node_index
-        self.nse_cost = nse_cost
-
-        # output variables-- recorded after optimization
-
-        # solver status
-        self.out_status: typing.optional(str) = None
-
-        # objective function value
-        self.out_ofv: typing.optional(float) = None
-
-        # non served energy for power
-        self.out_nse_power: typing.optional(pd.Series) = None
-
-        # non served energy for gas
-        self.out_nse_gas: typing.optional(pd.Series) = None
-
-        # flow on power lines
-        self.out_flow_p: typing.optional(pd.Series) = None
-
-        # flow on gas lines
-        self.out_flow_g: typing.optional(pd.Series) = None
-
-        # generation by generator
-        self.out_generation: typing.optional(pd.Series) = None
-
-        # gas supply
-        self.out_gas_supply: typing.optional(pd.Series) = None
-
-        # full problem for debugging purposes
-        self.out_prob = None
+        assert self.load.shape[0] == self.A_p.shape[0]
+        assert self.lines.shape[0] == self.A_p.shape[1]
+        assert self.gas_supply.shape[0] == self.A_g.shape[0]
+        assert self.gas_demand.shape[0] == self.A_g.shape[0]
+        assert self.pipelines.shape[0] == self.A_g.shape[1]
 
     def optimize(self):
         """
-        Optimize network and record results
+        Optimize network and record results.
         """
 
         # sets
@@ -273,7 +271,7 @@ class OptimizedNetwork:
             + sum(slack_g[n] * self.nse_cost for n in nodes_g)
         )
 
-        # Form and solve problem.
+        # form and solve problem
         prob = cp.Problem(obj, constraints)
         prob.solve()
 
@@ -286,17 +284,21 @@ class OptimizedNetwork:
         self.out_ofv = prob.value
 
         # non served energy for power
-        self.out_nse_power = pd.Series(
-            slack_p.value,
+        self.out_nse_power = pd.DataFrame(
+            {
+                "non_served_energy": slack_p.value,
+                "load": self.load.load_mw.values,
+            },
             index=pd.Index(nodes_p, name="node"),
-            name="non-served energy (MWh)",
         )
 
         # non served energy for gas
-        self.out_nse_gas = pd.Series(
-            slack_g.value,
+        self.out_nse_gas = pd.DataFrame(
+            {
+                "non_served_energy": slack_g.value,
+                "load": self.gas_demand.demand_gj.values,
+            },
             index=pd.Index(nodes_g, name="node"),
-            name="non-served energy (GJ)",
         )
 
         # flow on power lines
@@ -312,6 +314,14 @@ class OptimizedNetwork:
             index=pd.Index(nodes_g, name="node"),
             name="Gas flow by line (GJ)",
         )
+
+        # NSE and flows combined into one dict
+        self.out_energy_and_flows = {
+            "nse_power": self.out_nse_power,
+            "nse_gas": self.out_nse_gas,
+            "flow_power": self.out_flow_p,
+            "flow_gas": self.out_flow_g,
+        }
 
         # generation by generator
         self.out_generation = pd.Series(
