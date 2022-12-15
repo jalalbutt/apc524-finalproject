@@ -68,7 +68,6 @@ def update_figure(selected_year):
         hover_data=["State", "Population"],
         color="lat",
         color_continuous_scale="Viridis",  # range_color=(0, 20),
-        # size = "Population", size_max=400000,
         zoom=100,
         height=400,
     )
