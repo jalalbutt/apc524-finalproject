@@ -124,6 +124,9 @@ class OptimizedNetwork:
         # flow on gas lines
         self.out_flow_g: typing.optional(pd.Series) = None
 
+        # summary of NSE and flows
+        self.out_energy_and_Flows: typing.optional(dict) = None
+
         # generation by generator
         self.out_generation: typing.optional(pd.Series) = None
 
@@ -286,17 +289,21 @@ class OptimizedNetwork:
         self.out_ofv = prob.value
 
         # non served energy for power
-        self.out_nse_power = pd.Series(
-            slack_p.value,
+        self.out_nse_power = pd.DataFrame(
+            {
+                "non_served_energy": slack_p.value,
+                "load": self.load.load_mw.values,
+            },
             index=pd.Index(nodes_p, name="node"),
-            name="non-served energy (MWh)",
         )
 
         # non served energy for gas
-        self.out_nse_gas = pd.Series(
-            slack_g.value,
+        self.out_nse_gas = pd.DataFrame(
+            {
+                "non_served_energy": slack_g.value,
+                "load": self.gas_demand.demand.demand_gj.values,
+            },
             index=pd.Index(nodes_g, name="node"),
-            name="non-served energy (GJ)",
         )
 
         # flow on power lines
@@ -312,6 +319,14 @@ class OptimizedNetwork:
             index=pd.Index(nodes_g, name="node"),
             name="Gas flow by line (GJ)",
         )
+
+        # NSE and flows combined into one dict
+        self.out_energy_and_flows = {
+            "nse_power": self.out_nse_power,
+            "nse_gas": self.out_nse_gas,
+            "flow_power": self.out_flow_p,
+            "flow_gas": self.out_flow_g,
+        }
 
         # generation by generator
         self.out_generation = pd.Series(
