@@ -38,8 +38,8 @@ import traceback
 m = 100 # number of grid-points
 n = 100
 n = 100 #  currently not implemented
-L_x = 10
-H_y = 10
+L_m = 10
+L_n = 10
 
 f_type = 'oscillatory'
 f_type = 'delta'
@@ -59,7 +59,7 @@ class PerturbedNetwork:
 		f_type :   forcing function type (from a finite set)
 		m      :   # of grid points
 		radius :   perturbation extent in terms of grid [points] 
-		source_center :   coordinate pair; % of (L_x, H_y) (not indices)
+		source_center :   coordinate pair; % of (L_m, L_n) (not indices)
 
 
 	Outputs:
@@ -84,17 +84,17 @@ class PerturbedNetwork:
 		m = 100 # number of grid-points
 		n = 100
 		n = 100 #  currently not implemented
-		L_x = 10
-		H_y = 10
+		L_m = 10
+		L_n = 10
 
 		f_type = 'oscillatory'
 		f_type = 'delta'
 		source_center=  = ()
 		source_strength = 1000
-		radius = m/L_x* 0.1
+		radius = m/L_m* 0.1
 
 		pertNet2 = PerturbedNetwork(f_type= f_type, source_point= source_center, 
-		                            m= m, L_x= L_x, H_y= H_y, radius= radius)
+		                            m= m, L_m= L_m, L_n= L_n, radius= radius)
 		U = pertNet2.static_solve()
 		pertNet2.plot_solution()
 
@@ -106,18 +106,18 @@ class PerturbedNetwork:
 	source_center: [tuple,list,np.ndarray]  
 	m: int
 	n: int
-	L_x: int
-	H_y: int
+	L_m: int
+	L_n: int
 	radius_grid_fract: float = 0.01  # fraction of grid points (of the smaller dim.)
 	source_strength: float = 1000
 
 	def __post_init__(self):  # what should i do w this? generate tests?
 		self.failure = False
-		self.delta_x = L_x / (m+1)
-		self.delta_y = H_y / (n+1)
-		self.radius  = m/L_x* radius_grid_fract
-		self.x       = np.linspace(0, self.L_x, self.m + 2)
-		self.y       = np.linspace(0, self.H_y, self.n + 2)
+		self.delta_x = L_m / (m+1)
+		self.delta_y = L_n / (n+1)
+		self.radius  = m/L_m* radius_grid_fract
+		self.x       = np.linspace(0, self.L_m, self.m + 2)
+		self.y       = np.linspace(0, self.L_n, self.n + 2)
 
 		try:
 			assert (len(source_center) == 2), "Source point must be coordinate pair"
@@ -192,8 +192,8 @@ class PerturbedNetwork:
 		if f_type.lower() == 'oscillatory':
 			f = -2.0 * np.sin(X_source) * np.sin(Y_source)
 		elif f_type.lower() == 'delta':
-			circle = np.sqrt((X_source-source_center[1]*self.L_x)**2 \
-			                 + (Y_source-source_center[0]*self.H_y)**2)
+			circle = np.sqrt((X_source-source_center[1]*self.L_m)**2 \
+			                 + (Y_source-source_center[0]*self.L_n)**2)
 			f      = np.zeros(X_source.shape)
 			f[circle<radius] += source_strength
 
@@ -296,7 +296,7 @@ class PerturbedNetwork:
 
 	##---- Solution plotting
 	##----------------------
-	def plot_solution(self, U='static', addendum= '', show= False):#, X,Y,U, L_x, H_y):
+	def plot_solution(self, U='static', addendum= '', show= False):#, X,Y,U, L_m, L_n):
 		if self.failure: return print(self.intialization_failure_message)
 
 		# tests for solution plotting:
@@ -319,8 +319,8 @@ class PerturbedNetwork:
 		axes1.set_title("Solution u(x,y)  " + addendum)
 		axes1.set_xlabel("x")
 		axes1.set_ylabel("y")
-		axes1.set_xlim((0.0, self.L_x))
-		axes1.set_ylim((0.0, self.H_y))
+		axes1.set_xlim((0.0, self.L_m))
+		axes1.set_ylim((0.0, self.L_n))
 		cbar1 = fig1.colorbar(sol_plot, ax=axes1)
 		cbar1.set_label("u(x, y)")
 
@@ -336,8 +336,8 @@ class PerturbedNetwork:
 		axes2.set_title("Error |U - u|")
 		axes2.set_xlabel("x")
 		axes2.set_ylabel("y")
-		axes2.set_xlim((0.0, self.L_x))
-		axes2.set_ylim((0.0, self.H_y))
+		axes2.set_xlim((0.0, self.L_m))
+		axes2.set_ylim((0.0, self.L_n))
 		cbar2 = fig2.colorbar(sol_plot, ax=axes2)
 		cbar2.set_label("u(x, y)")
 
@@ -375,11 +375,11 @@ class PerturbedNetwork:
 		# first output is for infrastr network initialization, 
 		# second is first solution
 		self.U_t = np.zeros(shape= (2,*U.shape))
-		
+
 		return self.U_t
 
 
-	def time_evolve(self, ts, k: float= 1.):
+	def time_evolve(self, timesteps, k: float= 1.):
 		"""
 		Time-stepped solution of the diffusive-perturbation model.
 
@@ -410,7 +410,8 @@ class PerturbedNetwork:
 
 		# initialize for time-evolution
 		delta_t      = self.delta_x**2. / (4*k) * 0.8  # constraint: dt < dx^2/4k
-		sol_timebase = np.linspace(ts[0], ts[-1], int((ts[-1]-ts[0])/delta_t))  # define new timebase
+		sol_timebase = np.linspace(timesteps[0], timesteps[-1], 
+		                           int((timesteps[-1]-timesteps[0])/delta_t))  # define new timebase
 		U_time       = np.zeros(shape= [len(sol_timebase),*U_0.shape])
 		U_time[0]    = U_0		
 
