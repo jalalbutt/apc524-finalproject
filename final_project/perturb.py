@@ -105,23 +105,27 @@ class PerturbedNetwork:
 	f_type: str
 	source_center: [tuple,list,np.ndarray]  
 	m: int
+	n: int
 	L_x: int
 	H_y: int
-	radius: float = m/L_x* 0.01
+	radius_grid_fract: float = 0.01  # fraction of grid points (of the smaller dim.)
 	source_strength: float = 1000
 
 	def __post_init__(self):  # what should i do w this? generate tests?
 		self.failure = False
-		self.delta_x = L_x / (m + 1)
+		self.delta_x = L_x / (m+1)
+		self.delta_y = H_y / (n+1)
+		self.radius  = m/L_x* radius_grid_fract
 		self.x       = np.linspace(0, self.L_x, self.m + 2)
-		self.y       = np.linspace(0, self.H_y, self.m + 2)
+		self.y       = np.linspace(0, self.H_y, self.n + 2)
 
 		try:
-			assert (len(source_point) == 2), "Source point must be coordinate pair"
-			assert (m > 10), "Grid must be AT LEAST 10x10"
-			assert (radius < 0.1*m), "Disturbance radius cannot span >10% of grid"
+			assert (len(source_center) == 2), "Source point must be coordinate pair"
+			assert (m > 10), "Grid must be AT LEAST 10x10 points"
+			assert (n > 10), "Grid must be AT LEAST 10x10 points"
+			assert (self.radius < 0.1*m), "Disturbance radius cannot span >10% of grid"
 			assert (f_type in ['delta', 'oscillatory']), "Requested source-type is not yet configured."
-			assert (radius > 0.6*delta_x), "Source cannot be resolved on the grid due to small radius"
+			assert (radius > 0.6*self.delta_x), "Source cannot be resolved on the grid due to small radius"
 			
 		except:
 			traceback.print_exc()
@@ -158,7 +162,7 @@ class PerturbedNetwork:
 		A /= delta_x**2
 
 		return A
-
+	# self.A = construct_A(self.m, self.delta_x)
 
 
 	# Right-hand-side (forcing-function)
@@ -188,11 +192,6 @@ class PerturbedNetwork:
 		if f_type.lower() == 'oscillatory':
 			f = -2.0 * np.sin(X_source) * np.sin(Y_source)
 		elif f_type.lower() == 'delta':
-			# f = np.zeros(X_source.shape)
-			# sp = source_point
-			# for i in range(impulse_extent):
-			# 	f += signal.unit_impulse(X_source.shape, sp)*source_strength
-			# 	sp = (sp[0]-1, sp[1]-1)
 			circle = np.sqrt((X_source-source_center[1]*self.L_x)**2 \
 			                 + (Y_source-source_center[0]*self.H_y)**2)
 			f      = np.zeros(X_source.shape)
@@ -205,10 +204,8 @@ class PerturbedNetwork:
 
 
 	
-
-
-
-	# Solve discretized PDE in time
+	## -----Discretizations
+	## ---------------------------------
 	def solve_laplacian_system(self, m, A, f):
 		"""
 		Solve the Poisson eq. w/ the respective forcing-function.
@@ -223,11 +220,40 @@ class PerturbedNetwork:
 		-------
 		U [np.array]  : heat-kernel
 		"""
-		U = np.zeros((m+2, m+2))
+		U = np.zeros((m+2, m+2))  # m+2 to accommodate the boundary conditions
 		U[1:-1, 1:-1] = linalg.spsolve(A, f.reshape(m**2, order='F')).reshape((m, m), order='F')
 
 		return U
 
+
+
+	def forward_time_step(self, U, delta_t, A, f, k, method= 'forward euler'):
+	    """
+		Forward time-step on the perturbation equation.
+
+		Inputs:
+		------
+			U :   previous timestep solution
+			A :   discretized laplacian system
+			f :   source 
+			method:   type of forward time-step
+
+		Outputs:
+		-------
+			U_new
+	    """
+	    
+
+	    if method=='forward euler':
+	    	U_new = np.zeros(U.shape)
+	    	R = slice(1,-1)
+	    	print("A.shape:  {}".format(A.shape))
+	    	print("U.shape:  {}".format(U.shape))
+	    	print("f.shape:  {}".format(f.shape))
+	    	U_new[R,R] = U[R,R] + delta_t * (A * U[R,R] + f)  # U e [m, m]; but A isn't
+
+	    
+	    return U_new
 
 
 
@@ -263,6 +289,9 @@ class PerturbedNetwork:
 
 
 
+
+	##---- Solution plotting
+	##----------------------
 	def plot_solution(self):#, X,Y,U, L_x, H_y):
 		if self.failure: return print(self.intialization_failure_message)
 
@@ -299,14 +328,11 @@ class PerturbedNetwork:
 
 
 
-	# Laplacian solution
+	##----- Solutions
+	##---------------
 	def static_solve(self):
 		"""
-		Solution to the laplacian
-		
-		Inputs:
-		-------
-		self 
+		Solution to the laplacian.
 
 		Outputs:
 		-------
@@ -329,4 +355,50 @@ class PerturbedNetwork:
 		self.grid_error = self.compute_discretization_error(self.x,self.y,self.U)
 
 		return self.U
+
+
+	def time_evolve(self, ts, k: float= 1.):
+		"""
+		Time-stepped solution of the diffusive-perturbation model.
+
+		Inputs:
+		------
+			k :   diffusion coefficient
+
+		Outputs:
+		-------
+			U_time :   [np.array (time, space1, space2)]
+		"""
+		if self.failure: return print(self.intialization_failure_message)
+
+		# build Laplacian stencil
+		self.A = self.construct_A(self.m, self.delta_x)
+
+		# build source function
+		self.X_source,self.Y_source,\
+		self.f = self.construct_source(self.x,self.y,f_type = self.f_type, 
+		                                      source_strength= self.source_strength,
+		                                      source_center= self.source_center, 
+		                                      radius= self.radius)
+		
+		# determine initial condition:
+		U_0 = self.static_solve()
+		U_time    = np.zeros(shape= [len(ts),*U_0.shape])
+		U_time[0] = U_0
+
+		# step-forward in time
+		delta_t = self.delta_x**2. / (4*k) * 0.8  # constraint: dt < dx^2/4k
+		sol_timebase = np.linspace(ts[0], ts[-1], int((ts[-1]-ts[0])/delta_t))  # define new timebase
+
+		print_count = 0
+
+		for i,t in enumerate(sol_timebase):
+			U_time[i] = self.forward_time_step(U_time[i], delta_t, self.A, self.f, k,
+			                                   method= 'forward euler')
+
+			if i/len(sol_timebase) > print_count:
+				print("U_time.shape:  {}".format(U_time.shape))
+				print_count += 0.1
+
+		return U_time
 
