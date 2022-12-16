@@ -8,8 +8,6 @@ from dash import Dash, dcc, html, Input, Output
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
-import random
-import networkx as nx
 
 # import model to generate project data
 import model
@@ -30,16 +28,6 @@ us_cities = pd.read_csv(
     "https://raw.githubusercontent.com/plotly/"
     "datasets/master/us-cities-top-1k.csv"
 )
-
-# dummy network
-g = nx.Graph()
-g.add_nodes_from(us_cities.index.tolist())
-
-i = 0
-while i < 20:
-    randomCity = random.sample(us_cities.index.tolist(), 2)
-    g.add_edge(randomCity[0], randomCity[1], capacity=random.random())
-    i += 1
 
 app = Dash(__name__)
 
@@ -136,11 +124,11 @@ def update_figure(selected_timestep):
                 lat=edge["lat"],
                 lon=edge["lon"],
                 mode="lines",
-                line={"color": "#FF0000"},
+                line={"color": "#000000"},
                 # text="Flow: " + str(flow_p[i])+" MW\n"
                 #     "Direction: "+str(start_index)+"->"+str(end_index),
                 # hoverinfo="text",
-                # hover
+                hoverinfo="skip",
             )
         )
 
