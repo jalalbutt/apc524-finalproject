@@ -1,9 +1,4 @@
-.. finalproject documentation master file, created by
-   sphinx-quickstart on Sat Dec  3 17:45:04 2022.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to finalproject's documentation!
+Welcome to the InfraRAPS documentation!
 ========================================
 
 .. toctree::
@@ -19,8 +14,33 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+Introduction
+------------
+InfraRAPS (Infrastructure Resilience And Preparedness Simulator) is a python framework modeling coupled infrastructure networks and their resilience to extreme events.
+It simulates the US energy and natural gas grid as an optimized coupled network combined with a diffusion-based perturbation network to see how the network performance evolves under critical conditions.
+In the current version the perturbation models a military attack with nuclear weapons.
+
+Results
+-------
+The results were visualized with Dash and can be found online under:
+
+https://manuelk.pythonanywhere.com/
+
+Local display: If you want to display the Dash app locally, make sure you have all required packages installed:
+
+`pip install -r final-project/dash/requirements.txt`
+
+Run the Dash app:
+
+`python3 final-project/app.py`
+
+Results are then visible with a browser via http://127.0.0.1:8050/.
+
 Modules
 -------
 
 .. automodule:: final_project.optimization
+    :members:
+
+.. automodule:: final_project.model
     :members:

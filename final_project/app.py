@@ -26,12 +26,6 @@ princeton_path = "assets/princeton.png"
 
 timesteps = pd.Series([0, 1])
 
-# dummy data
-us_cities = pd.read_csv(
-    "https://raw.githubusercontent.com/plotly/"
-    "datasets/master/us-cities-top-1k.csv"
-)
-
 app = Dash(__name__)
 
 gws = "graph-with-slider"
@@ -54,7 +48,7 @@ app.layout = html.Div(
             timesteps.max(),
             step=None,
             value=timesteps.min(),
-            marks={str(year): str(year) for year in timesteps.unique()},
+            marks={0: "Start", 1: "End"},
             id="time-slider",
         ),
     ]
@@ -92,6 +86,7 @@ def update_figure(selected_timestep):
         color_continuous_scale=px.colors.diverging.RdGy,
         mapbox_style="stamen-terrain",
     )
+    fig.update_layout(coloraxis_colorbar_title_text="Value")
 
     fig2 = px.scatter_mapbox(
         nodemaster_p,
@@ -104,6 +99,7 @@ def update_figure(selected_timestep):
         zoom=3,
         height=400,
     )
+    fig2.update_layout(coloraxis_colorbar_title_text="Relative service")
 
     fig.add_trace(fig2.data[0])
     fig.layout.coloraxis2 = fig2.layout.coloraxis
@@ -118,8 +114,8 @@ def update_figure(selected_timestep):
         "size": nodemaster_p["load"],
     }
 
-    fig.layout.coloraxis2.colorbar.x = -0.05
-    fig.layout.coloraxis.colorbar.x = -0.1
+    fig.layout.coloraxis2.colorbar.x = -0.07
+    fig.layout.coloraxis.colorbar.x = -0.13
 
     for i in range(len(A_p.T)):
         for j in range(len(A_p.T[i])):
