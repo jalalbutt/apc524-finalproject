@@ -151,8 +151,8 @@ def test_network_model():
     nodes_p = pd.DataFrame(
         index=pd.Index(np.arange(A_p.shape[0]), name="node")
     )
-    nodes_p["lat"] = [30, 35, 40]
-    nodes_p["lon"] = [75, 80, 85]
+    nodes_p["lat"] = [30, 38, 40]
+    nodes_p["lon"] = [-75, -80, -95]
 
     nodes_g = nodes_p.copy(deep=True)
 
@@ -160,7 +160,7 @@ def test_network_model():
 
     # initial array
     lat = np.linspace(25, 45, 10)
-    lon = np.linspace(70, 90, 10)
+    lon = np.linspace(-70, -120, 10)
     init_array_PDE = np.zeros([10, 10])
     array_PDE = xr.DataArray(
         init_array_PDE, coords=[lat, lon], dims=["lat", "lon"]
@@ -170,7 +170,7 @@ def test_network_model():
     # start of the disturbance
     times_opt = [1, 2, 3, 4, 5]
     latlon_start = [45, 85]
-    timesteps = [0, 1, 2, 3, 4, 5]
+    timesteps = [0, 1]
     # other stuff- time, params, etc
 
     # initialize model
@@ -194,13 +194,13 @@ def test_network_model():
 
     # fake results that show what the format should be
     array_result = xr.DataArray(
-        np.random.rand(10, 10, 5),
-        coords=[lat, lon, [0, 1, 2, 3, 4]],
+        np.random.rand(10, 10, 2),
+        coords=[lat, lon, [0, 1]],
         dims=["lat", "lon", "time"],
     )
     results_dict = {
         "nse_power": pd.DataFrame(
-            {"non_served_energy": [0, 1, 2], "load": [2, 2, 2]},
+            {"non_served_energy": [0, 1, 2], "load": [2, 3, 5]},
             index=pd.Index([0, 1, 2], name="node"),
         ),
         "nse_gas": pd.DataFrame(
@@ -218,7 +218,7 @@ def test_network_model():
             name="Power flow by line (MW)",
         ),
     }
-    opt_result = {0: results_dict, 5: results_dict}
+    opt_result = {0: results_dict, 1: results_dict}
 
     # our results are:
     # array_result: self-described dimensions

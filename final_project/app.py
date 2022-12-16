@@ -23,13 +23,9 @@ import model
     nodes_g,
 ) = model.test_network_model()
 
-timesteps = pd.Series(range(5))
+timesteps = pd.Series([0, 1])
 
 # dummy data
-df_density = pd.read_csv(
-    "https://raw.githubusercontent.com/plotly/"
-    "datasets/master/earthquakes-23k.csv"
-)
 us_cities = pd.read_csv(
     "https://raw.githubusercontent.com/plotly/"
     "datasets/master/us-cities-top-1k.csv"
@@ -37,12 +33,12 @@ us_cities = pd.read_csv(
 
 # dummy network
 g = nx.Graph()
-g.add_nodes_from(us_cities["City"].tolist())
+g.add_nodes_from(us_cities.index.tolist())
 
 i = 0
 while i < 20:
-    randomCities = random.sample(us_cities["City"].tolist(), 2)
-    g.add_edge(randomCities[0], randomCities[1], capacity=random.random())
+    randomCity = random.sample(us_cities.index.tolist(), 2)
+    g.add_edge(randomCity[0], randomCity[1], capacity=random.random())
     i += 1
 
 app = Dash(__name__)
@@ -58,83 +54,93 @@ app.layout = html.Div(
             step=None,
             value=timesteps.min(),
             marks={str(year): str(year) for year in timesteps.unique()},
-            id="year-slider",
+            id="time-slider",
         ),
     ]
 )
 
 
-@app.callback(Output(gws, "figure"), Input("year-slider", "value"))
-def update_figure(selected_year):
+@app.callback(Output(gws, "figure"), Input("time-slider", "value"))
+def update_figure(selected_timestep):
     """
     Updates figure based on user input.
     """
-    # filtered_df = df[df.year == selected_year]
+    pertubation = (
+        array_result.sel(time=selected_timestep)
+        .to_dataframe(name="value")
+        .reset_index()
+    )
+
+    nodemaster_p = pd.concat(
+        (opt_result[selected_timestep]["nse_power"], nodes_p), axis=1
+    )
+    nodemaster_p["relative_service"] = (
+        1 - nodemaster_p["non_served_energy"] / nodemaster_p["load"]
+    )
+    nodemaster_p["index"] = nodemaster_p.index
+
+    flow_p = opt_result[selected_timestep]["flow_power"]
 
     fig = px.density_mapbox(
-        df_density,
-        lat="Latitude",
-        lon="Longitude",
-        z="Magnitude",
+        pertubation,
+        lat="lat",
+        lon="lon",
+        z="value",
         radius=10,
-        center=dict(lat=0, lon=180),
         zoom=0,
         color_continuous_scale=px.colors.diverging.RdGy,
         mapbox_style="stamen-terrain",
     )
 
     fig2 = px.scatter_mapbox(
-        us_cities,
+        nodemaster_p,
         lat="lat",
         lon="lon",
-        hover_name="City",
-        hover_data=["State", "Population"],
-        color="lat",
+        hover_name="index",
+        hover_data=["non_served_energy", "load"],
+        color="relative_service",
         color_continuous_scale="Viridis",  # range_color=(0, 20),
-        # size = "Population", size_max=400000,
-        zoom=100,
+        zoom=3,
         height=400,
     )
-    fig2.update_traces(marker={"size": 135})
 
     fig.add_trace(fig2.data[0])
     fig.layout.coloraxis2 = fig2.layout.coloraxis
 
     fig["data"][1]["marker"] = {
-        "color": us_cities["lat"],
+        "color": nodemaster_p["relative_service"],
         "coloraxis": "coloraxis2",
         "opacity": 1,
         "sizemode": "area",
         "sizeref": 0.01,
         "autocolorscale": False,
-        "size": 10,
+        "size": nodemaster_p["load"],
     }
 
     fig.layout.coloraxis2.colorbar.x = -0.05
     fig.layout.coloraxis.colorbar.x = -0.1
 
-    for edge in g.edges():
-        city1 = us_cities[us_cities["City"] == edge[0]]
-        city2 = us_cities[us_cities["City"] == edge[1]]
-
-        edgecities = pd.concat((city1.iloc[[0]], city2.iloc[[0]]))
-
-        capacity = g[edge[0]][edge[1]]["capacity"]
-        if capacity < 0.3:
-            color = "#FF0000"
-        if 0.1 <= capacity < 0.6:
-            color = "#FF7F00"
-        if 0.6 <= capacity:
-            color = "#00FF00"
+    for i in range(len(A_p.T)):
+        for j in range(len(A_p.T[i])):
+            if A_p.T[i][j] == 1:
+                start_index = j
+                start_node = nodemaster_p.iloc[start_index]
+            if A_p.T[i][j] == -1:
+                end_index = j
+                end_node = nodemaster_p.iloc[end_index]
+        edge = pd.concat((start_node, end_node), axis=1).T
+        edge["flow"] = [flow_p[i], -flow_p[i]]
 
         fig.add_trace(
             go.Scattermapbox(
-                lat=edgecities["lat"],
-                lon=edgecities["lon"],
+                lat=edge["lat"],
+                lon=edge["lon"],
                 mode="lines",
-                line={"color": color},
-                text="Capacity =" + str(capacity),
-                hoverinfo="text",
+                line={"color": "#FF0000"},
+                # text="Flow: " + str(flow_p[i])+" MW\n"
+                #     "Direction: "+str(start_index)+"->"+str(end_index),
+                # hoverinfo="text",
+                # hover
             )
         )
 
