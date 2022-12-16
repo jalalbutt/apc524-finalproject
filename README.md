@@ -1,4 +1,5 @@
-# APC 524 - Final project
+# InfraRAPS
+## APC 524 - Final project
 
 **Authors**
 Jalal Butt, Gabriel Mantegna, Manuel Kreutle
