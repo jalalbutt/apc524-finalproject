@@ -29,6 +29,7 @@ import scipy.sparse.linalg as linalg
 
 from dataclasses import dataclass
 import traceback
+import warnings
 
 
 ## Arb parameters for testing.
@@ -125,7 +126,10 @@ class PerturbedNetwork:
 			assert (n > 10), "Grid must be AT LEAST 10x10 points"
 			assert (self.radius < 0.1*m), "Disturbance radius cannot span >10% of grid"
 			assert (f_type in ['delta', 'oscillatory']), "Requested source-type is not yet configured."
-			assert (radius > 0.6*self.delta_x), "Source cannot be resolved on the grid due to small radius"
+			assert (self.radius > 0.6*self.delta_x), "Source cannot be resolved on the grid due to small radius"
+
+			# temporary restrictions
+			assert (self.m == self.n), "Cannot handle non-square grid atm. Please make m==n"
 			
 		except:
 			traceback.print_exc()
@@ -301,8 +305,9 @@ class PerturbedNetwork:
 
 		# tests for solution plotting:
 
-		if U != 'static':
-			assert (U.shape== (self.X.shape)), "The requested solution plot does not match the grid dimensions (X,Y). Check again."
+		if U != 'static' and (U.shape!=(self.X.shape)):
+			warnings.warn("The requested solution plot does not match the grid dimensions (X,Y). Check again.")
+			# assert (U.shape== (self.X.shape)), "The requested solution plot does not match the grid dimensions (X,Y). Check again."
 
 
 		# Plot solution
@@ -374,7 +379,7 @@ class PerturbedNetwork:
 
 		# first output is for infrastr network initialization, 
 		# second is first solution
-		self.U_t = np.zeros(shape= (2,*U.shape))
+		self.U_t = np.zeros(shape= (2,*self.U.shape))
 
 		return self.U_t
 
@@ -433,4 +438,23 @@ class PerturbedNetwork:
 		U_t[:,1:-1,1:-1]= U_time.reshape(U_time.shape[0], 
 		                               int(np.sqrt(U_time.shape[-1])), -1)
 		return U_t
+
+
+
+	def solve(self, timesteps:list =[0,1], method:str ='static_solve')->np.ndarray:
+		""" 
+		Solve system based on desired mode.
+		"""
+
+		if method.lower()=='static_solve':
+			U_t = self.static_solve()
+
+		elif method.lower()=='time_evolve':
+			U_t = self.time_evolve(timesteps)
+		else:
+			print("Did not receive a valid solution method.")
+			return ()
+
+		return U_t
+
 
