@@ -2,11 +2,9 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from dataclasses import dataclass
-
-# import typing
+import typing
 import optimization
-
-# import perturb  # does not exist yet
+import perturb
 
 
 @dataclass
@@ -34,10 +32,19 @@ class NetworkModel:
     times_opt: list
 
     # PDE params
-    array_PDE: xr.DataArray
-    latlon_start: list
-    timesteps: list  # could be in a different form
-    # add other PDE params
+    latlon_source: list
+    source_type: str
+    solve_type: str
+    num_lat_gridpoints: int
+    num_lon_gridpoints: int
+    lon_bounds: list
+    lat_bounds: list
+    timesteps: typing.Optional[list] = [
+        0,
+        1,
+    ]  # currently only works for 2 timesteps, 0 and 1
+    source_radius: typing.Optional[float] = None
+    source_strength: float = 1000
 
     # default inputs that are not likely to change
     p_hat_mw: float = 100
@@ -46,8 +53,8 @@ class NetworkModel:
     nse_cost: float = 1000
 
     # # outputs- not meant to be inputted
-    # out_array_result: typing.optional(xr.DataArray) = None
-    # out_opt_result: typing.optional(dict) = None
+    out_array_result: typing.Optional[xr.DataArray] = None
+    out_opt_result: typing.Optional[dict] = None
 
     def __post_init__(self):
         """
@@ -82,8 +89,27 @@ class NetworkModel:
         optimization for the desired time steps.
         """
 
-        # PDE_input_array = self.array_PDE.values
-
+        # initialize array of zeros
+        lat = np.linspace(
+            self.lat_bounds[0], self.lat_bounds[1], self.length_y_direction
+        )
+        lon = np.linspace(
+            self.lon_bounds[0], self.lon_bounds[1], self.length_x_direction
+        )
+        time = np.array(self.timesteps)
+        empty_array = xr.DataArray(
+            np.zeros(
+                (
+                    self.length_x_direction,
+                    self.length_y_direction,
+                    len(self.timesteps),
+                )
+            ),
+            dims=["lat", "lon", "time"],
+            coords=[lat, lon, time],
+        )
+        self.empty_array = empty_array
+        self.p = perturb.PerturbedNetwork
         # # get coordinate closest to latlon_start
         # coordinate_start = [5, 5]
 

@@ -117,7 +117,7 @@ class PerturbedNetwork:
     radius: typing.Optional[float] = None
     source_strength: float = 1000
 
-    def __post_init__(self):  # what should i do w this? generate tests?
+    def __post_init__(self):
         self.failure = False
         self.delta_x = self.L_x / (self.m + 1)
         self.x = np.linspace(0, self.L_x, self.m + 2)
