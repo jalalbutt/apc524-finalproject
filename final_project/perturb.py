@@ -299,12 +299,22 @@ class PerturbedNetwork:
 	def plot_solution(self, U='static', addendum= '', show= False):#, X,Y,U, L_x, H_y):
 		if self.failure: return print(self.intialization_failure_message)
 
+		# tests for solution plotting:
+
+		if U != 'static':
+			assert (U.shape== (self.X.shape)), "The requested solution plot does not match the grid dimensions (X,Y). Check again."
+
+
 		# Plot solution
 		fig1 = plt.figure()
 		axes1 = fig1.add_subplot(1, 1, 1)
 		if U=='static':
 			sol_plot = axes1.pcolor(self.X, self.Y, self.U, cmap=plt.get_cmap('RdBu_r'))
 		else:
+			if len(U.shape) > 2 and U.shape[0] > 1:
+				print("\nNOTE: the requested solution to plot contained multiple time-steps")
+				print("-----    only plotting the first one")
+				U = U[0]
 			sol_plot = axes1.pcolor(self.X, self.Y, U, cmap=plt.get_cmap('RdBu_r'))
 		axes1.set_title("Solution u(x,y)  " + addendum)
 		axes1.set_xlabel("x")
@@ -338,7 +348,7 @@ class PerturbedNetwork:
 
 	##----- Solutions
 	##---------------
-	def static_solve(self):
+	def static_solve(self,**kwargs):
 		"""
 		Solution to the laplacian.
 
@@ -362,7 +372,11 @@ class PerturbedNetwork:
 		self.X,self.Y,self.norm_error,\
 		self.grid_error = self.compute_discretization_error(self.x,self.y,self.U)
 
-		return self.U
+		# first output is for infrastr network initialization, 
+		# second is first solution
+		self.U_t = np.zeros(shape= (2,*U.shape))
+		
+		return self.U_t
 
 
 	def time_evolve(self, ts, k: float= 1.):
