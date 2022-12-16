@@ -21,6 +21,9 @@ import model
     nodes_g,
 ) = model.test_network_model()
 
+logo_path = "assets/logo.jpeg"
+princeton_path = "assets/princeton.png"
+
 timesteps = pd.Series([0, 1])
 
 # dummy data
@@ -35,6 +38,16 @@ gws = "graph-with-slider"
 
 app.layout = html.Div(
     [
+        html.Img(
+            src=princeton_path,
+            height=150,
+            style={
+                "float": "right",
+                "margin-left": "auto",
+                "margin-right": 115,
+            },
+        ),
+        html.Img(src=logo_path, height=150),
         dcc.Graph(id=gws),
         dcc.Slider(
             timesteps.min(),
