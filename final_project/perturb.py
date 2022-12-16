@@ -246,11 +246,15 @@ class PerturbedNetwork:
 
 	    if method=='forward euler':
 	    	U_new = np.zeros(U.shape)
-	    	R = slice(1,-1)
-	    	print("A.shape:  {}".format(A.shape))
-	    	print("U.shape:  {}".format(U.shape))
-	    	print("f.shape:  {}".format(f.shape))
-	    	U_new[R,R] = U[R,R] + delta_t * (A * U[R,R] + f)  # U e [m, m]; but A isn't
+	    	R = slice(1,-1)  # cut off ends
+	    	R = slice(0,None)  # all points
+	    	# print("\n")
+	    	# print("A.shape:  {}".format(A.shape))
+	    	# print("U.shape:  {}".format(U.shape))
+	    	# print("f.shape:  {}".format(f.shape))
+	    	# print("\n")
+	    	# U_new[R,R] = U[R,R] + delta_t * (A * U[R,R] + f)  # U e [m, m]; but A isn't
+	    	U_new = U + delta_t * (A*U + f)  # U e [m, m]; but A isn't
 
 	    
 	    return U_new
@@ -292,14 +296,17 @@ class PerturbedNetwork:
 
 	##---- Solution plotting
 	##----------------------
-	def plot_solution(self):#, X,Y,U, L_x, H_y):
+	def plot_solution(self, U='static', addendum= '', show= False):#, X,Y,U, L_x, H_y):
 		if self.failure: return print(self.intialization_failure_message)
 
 		# Plot solution
 		fig1 = plt.figure()
 		axes1 = fig1.add_subplot(1, 1, 1)
-		sol_plot = axes1.pcolor(self.X, self.Y, self.U, cmap=plt.get_cmap('RdBu_r'))
-		axes1.set_title("Solution u(x,y)")
+		if U=='static':
+			sol_plot = axes1.pcolor(self.X, self.Y, self.U, cmap=plt.get_cmap('RdBu_r'))
+		else:
+			sol_plot = axes1.pcolor(self.X, self.Y, U, cmap=plt.get_cmap('RdBu_r'))
+		axes1.set_title("Solution u(x,y)  " + addendum)
 		axes1.set_xlabel("x")
 		axes1.set_ylabel("y")
 		axes1.set_xlim((0.0, self.L_x))
@@ -307,7 +314,8 @@ class PerturbedNetwork:
 		cbar1 = fig1.colorbar(sol_plot, ax=axes1)
 		cbar1.set_label("u(x, y)")
 
-		plt.show()
+		if show:
+			plt.show()
 
 
 	def plot_error(self):#, X,Y,norm_error,grid_error):
@@ -380,25 +388,34 @@ class PerturbedNetwork:
 		                                      source_strength= self.source_strength,
 		                                      source_center= self.source_center, 
 		                                      radius= self.radius)
+		print("Maximum value of self.f: ".format(np.max(self.f)))
 		
 		# determine initial condition:
-		U_0 = self.static_solve()
-		U_time    = np.zeros(shape= [len(ts),*U_0.shape])
-		U_time[0] = U_0
+		R = slice(1,-1)
+		U_0       = self.static_solve()[R,R].reshape(-1) # subset... fuck it. we'll take the L on the edges.
+
+		# initialize for time-evolution
+		delta_t      = self.delta_x**2. / (4*k) * 0.8  # constraint: dt < dx^2/4k
+		sol_timebase = np.linspace(ts[0], ts[-1], int((ts[-1]-ts[0])/delta_t))  # define new timebase
+		U_time       = np.zeros(shape= [len(sol_timebase),*U_0.shape])
+		U_time[0]    = U_0		
 
 		# step-forward in time
-		delta_t = self.delta_x**2. / (4*k) * 0.8  # constraint: dt < dx^2/4k
-		sol_timebase = np.linspace(ts[0], ts[-1], int((ts[-1]-ts[0])/delta_t))  # define new timebase
-
-		print_count = 0
+		print_count = 0.
 
 		for i,t in enumerate(sol_timebase):
-			U_time[i] = self.forward_time_step(U_time[i], delta_t, self.A, self.f, k,
+			U_time[i] = self.forward_time_step(U_time[i], delta_t, self.A, self.f.reshape(-1), k,
 			                                   method= 'forward euler')
 
-			if i/len(sol_timebase) > print_count:
-				print("U_time.shape:  {}".format(U_time.shape))
-				print_count += 0.1
+			if i/len(sol_timebase) >= print_count:
+				U_plot             = np.zeros(shape=(self.m+2,self.m+2))
+				U_plot[1:-1,1:-1] = U_time[i].reshape(int(np.sqrt(U_time.shape[-1])), -1)
+				print_count += 0.25
+				self.plot_solution(U_plot, addendum= 't=%.2fsec'%t,show= False)
+				
 
-		return U_time
+		U_t = np.zeros(shape=(U_time.shape[0], self.m+2, self.m+2))
+		U_t[:,1:-1,1:-1]= U_time.reshape(U_time.shape[0], 
+		                               int(np.sqrt(U_time.shape[-1])), -1)
+		return U_t
 
