@@ -33,7 +33,10 @@ class ArrayModifier(typing.Protocol):
 
     """
 
-    array_init: np.ndarray
+    m: int
+    n: int
+    L_m: float
+    L_n: float
     source_indices: list
     source_type: str
     solve_type: str
