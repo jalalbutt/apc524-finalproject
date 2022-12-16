@@ -5,13 +5,18 @@ import numpy as np
 
 class ArrayModifier(typing.Protocol):
     """
-    A class that takes a 2 dimensional numpy array (m x n) as an input
-    (plus other args), and contains a method called "solve" that
+    A class that takes the dimensions of a 2D array as inputs,
+    plus other params, and contains a method called "solve" that
     returns a 3 dimensional numpy array (m x n x t).
 
     Args:
-    - array_init: two-dimensional np.ndarray with dimensions m x n.
-        represents the array that will be modified.
+    - m: y-dimension of array to be perturbed (number of rows)
+    - n: x-dimension of array to be perturbed (number of columns)
+    - L_m: physical length of y-dimension (units not important,
+        only used to define the meaning of source_radius relative
+        to the array)
+    - L_n: physical length of x-dimension (units not important, see
+        above)
     - source_indices: list containing the coordinates of the numpy array
         to start the perturbation at. first coordinate is for rows (length m),
         second coordinate is for columns (length n). *ZERO INDEXED*
