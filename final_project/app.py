@@ -23,15 +23,6 @@ princeton_path = "assets/princeton.png"
 
 timesteps = pd.Series([0, 1])
 
-(
-    array_result,
-    opt_result,
-    A_p,
-    A_g,
-    nodes_p,
-    nodes_g,
-) = model.test_network_model()
-
 app.layout = html.Div(
     [
         html.Img(
@@ -142,6 +133,15 @@ def update_figure(submit, selected_timestep, lat, lon, radius):
     """
     Updates figure based on user input.
     """
+
+    (
+        array_result,
+        opt_result,
+        A_p,
+        A_g,
+        nodes_p,
+        nodes_g,
+    ) = model.test_network_model()
 
     pertubation = (
         array_result.sel(time=selected_timestep)
