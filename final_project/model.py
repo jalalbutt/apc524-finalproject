@@ -130,7 +130,7 @@ class NetworkModel:
         self.out_array_result = xr.DataArray(
             np.absolute(PDE_output_array[:, 1:-1, 1:-1]),
             dims=["time", "lat", "lon"],
-            coords=[time, lat, lon],
+            coords=[time, lat[::-1], lon],
         )
 
         # at desired timesteps of out_array_result, calculate impact on
@@ -219,7 +219,7 @@ def run_model(
 
     load = pd.DataFrame()
     load["node"] = [0, 1, 2]
-    load["load_mw"] = [0, 0, 40]
+    load["load_mw"] = [20, 20, 40]
 
     gas_supply = pd.DataFrame()
     gas_supply["node_g"] = [0, 1, 2]
@@ -239,8 +239,8 @@ def run_model(
     nodes_p = pd.DataFrame(
         index=pd.Index(np.arange(A_p.shape[0]), name="node")
     )
-    nodes_p["lat"] = [30, 35, 40]
-    nodes_p["lon"] = [75, 80, 85]
+    nodes_p["lat"] = [30, 38, 40]
+    nodes_p["lon"] = [-75, -80, -95]
 
     nodes_g = nodes_p.copy(deep=True)
 
@@ -249,8 +249,8 @@ def run_model(
     latlon_source = [lat, lon]
     lat_bounds = [18, 52]
     lon_bounds = [-125, -64]
-    num_lat_gridpoints = 100
-    num_lon_gridpoints = 100
+    num_lat_gridpoints = 300
+    num_lon_gridpoints = 300
     lat_bounds_distance = 3500  # km
     lon_bounds_distance = 3500  # km
     source_radius = radius
