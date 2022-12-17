@@ -147,7 +147,9 @@ class PerturbedNetwork:
             ), "Source point must be coord. pair"
             assert self.m > 10, "Grid must be AT LEAST 10x10 points"
             assert self.n > 10, "Grid must be AT LEAST 10x10 points"
-            assert self.radius < 0.1 * self.m, "radius can't span >10% of grid"
+            assert (
+                self.radius < 0.1 * self.L_m
+            ), "radius can't span >10% of grid"
             assert self.f_type in [
                 "delta",
                 "oscillatory",
@@ -431,6 +433,7 @@ class PerturbedNetwork:
         # first output is for infrastr network initialization,
         # second is first solution
         self.U_t = np.zeros(shape=(2, *self.U.shape))
+        self.U_t[1] = self.U.copy()
 
         return self.U_t
 
