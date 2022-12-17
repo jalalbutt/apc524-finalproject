@@ -94,7 +94,7 @@ app.layout = html.Div(
                                 dcc.Input(
                                     id="input-blastradius",
                                     type="text",
-                                    value="12",
+                                    value="35",
                                     style={"float": "center"},
                                 ),
                             ],
@@ -168,6 +168,7 @@ def update_figure(submit, selected_timestep, lat, lon, radius):
         radius=3,
         zoom=0,
         color_continuous_scale=px.colors.diverging.RdGy,
+        range_color=(1, pertubation["value"].max() + 1.1),
         mapbox_style="stamen-terrain",
     )
     fig.update_layout(coloraxis_colorbar_title_text="Value")
@@ -210,7 +211,10 @@ def update_figure(submit, selected_timestep, lat, lon, radius):
                 end_index = j
                 end_node = nodemaster_p.iloc[end_index]
         edge = pd.concat((start_node, end_node), axis=1).T
-        edge["flow"] = [flow_p[i], -flow_p[i]]
+        if flow_p[i]:
+            edge["flow"] = [flow_p[i], -flow_p[i]]
+        else:
+            edge["flow"] = [0, -0]
 
         fig.add_trace(
             go.Scattermapbox(
