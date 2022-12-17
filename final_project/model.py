@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 import typing
 import optimization
 import perturb
+from pathlib import Path
 
 
 @dataclass
@@ -130,7 +131,7 @@ class NetworkModel:
         self.out_array_result = xr.DataArray(
             np.absolute(PDE_output_array[:, 1:-1, 1:-1]),
             dims=["time", "lat", "lon"],
-            coords=[time, lat, lon],
+            coords=[time, lat[::-1], lon],
         )
 
         # at desired timesteps of out_array_result, calculate impact on
@@ -195,54 +196,19 @@ def run_model(
 
     # optimization network characteristics
 
+    data_path = Path("./final_project/data")
     # set up parameters
-    A_p = np.array(
-        [[1, 0, -1], [-1, 1, 0], [0, -1, 1]]
-    )  # edge-node incidence matrix for power
+    A_p = pd.read_csv(data_path / "A_p.csv", index_col=0).values
     A_g = A_p  # same for gas
 
-    generators = pd.DataFrame()
-    generators["name"] = ["coal", "gas", "pv"]
-    generators["node_p"] = [0, 1, 2]
-    generators["node_g"] = [0, 1, 2]
-    generators["is_gas"] = [False, True, False]
-    generators["min_cap_mw"] = [0, 0, 0]
-    generators["max_cap_mw"] = [100, 200, 50]
-    generators["fuel_cost_dollars_per_mwh"] = [5, 10, 50]
-    generators["efficiency_gj_in_per_mwh_out"] = [5, 5, 5]
-
-    lines = pd.DataFrame()
-    lines["from_node"] = [0, 1, 2]
-    lines["to_node"] = [1, 2, 0]
-    lines["reactance_pu"] = [0.3, 0.3, 0.3]
-    lines["capacity_mw"] = [500, 500, 500]
-
-    load = pd.DataFrame()
-    load["node"] = [0, 1, 2]
-    load["load_mw"] = [0, 0, 40]
-
-    gas_supply = pd.DataFrame()
-    gas_supply["node_g"] = [0, 1, 2]
-    gas_supply["supply_gj"] = [1000, 1000, 1000]  # exajoules
-
-    gas_demand = pd.DataFrame()
-    gas_demand["node_g"] = [0, 1, 2]
-    gas_demand["demand_gj"] = [100, 100, 100]
-
-    pipelines = pd.DataFrame()
-    pipelines["from_node"] = [0, 1, 2]
-    pipelines["to_node"] = [1, 2, 0]
-    pipelines["capacity_gj"] = [100, 100, 100]
-    pipelines["cost"] = [5, 5, 5]
-
-    # coordinates of nodes
-    nodes_p = pd.DataFrame(
-        index=pd.Index(np.arange(A_p.shape[0]), name="node")
-    )
-    nodes_p["lat"] = [30, 35, 40]
-    nodes_p["lon"] = [75, 80, 85]
-
-    nodes_g = nodes_p.copy(deep=True)
+    generators = pd.read_csv(data_path / "generators.csv")
+    lines = pd.read_csv(data_path / "lines.csv")
+    load = pd.read_csv(data_path / "load.csv")
+    gas_supply = pd.read_csv(data_path / "gas_supply.csv")
+    gas_demand = pd.read_csv(data_path / "gas_demand.csv")
+    pipelines = pd.read_csv(data_path / "pipelines.csv")
+    nodes_g = pd.read_csv(data_path / "nodes_g.csv")
+    nodes_p = pd.read_csv(data_path / "nodes_p.csv")
 
     # inputs for PDE
 
@@ -297,3 +263,11 @@ def run_model(
         model.nodes_p,
         model.nodes_g,
     )
+
+
+if __name__ == "__main__":
+    lat = 18.5
+    lon = -124
+    radius = 35
+    ar, a, b, c, d, e = run_model(lat, lon, radius)
+    print("")
