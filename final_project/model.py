@@ -1,3 +1,8 @@
+"""
+model.py
+--------
+The module coupling the two networks
+"""
 import numpy as np
 import pandas as pd
 import xarray as xr

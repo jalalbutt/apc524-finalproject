@@ -20,21 +20,23 @@ InfraRAPS (Infrastructure Resilience And Preparedness Simulator) is a python fra
 It simulates the US energy and natural gas grid as an optimized coupled network combined with a diffusion-based perturbation network to see how the network performance evolves under critical conditions.
 In the current version the perturbation models a military attack with nuclear weapons.
 
+Requirements
+------------
+Make sure you have all required packages installed:
+
+`pip install -r requirements.txt`
+
 Results
 -------
 The results were visualized with Dash and can be found online under:
 
 https://manuelk.pythonanywhere.com/
 
-Local display: If you want to display the Dash app locally, make sure you have all required packages installed:
-
-`pip install -r final-project/dash/requirements.txt`
-
-Run the Dash app:
+Local display: If you want to display the Dash app locally, run the Dash app via:
 
 `python3 final-project/app.py`
 
-Results are then visible with a browser via http://127.0.0.1:8050/.
+Results are then visible with a browser at http://127.0.0.1:8050/.
 
 Modules
 -------
