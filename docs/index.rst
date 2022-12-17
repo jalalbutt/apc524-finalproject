@@ -42,5 +42,14 @@ Modules
 .. automodule:: final_project.optimization
     :members:
 
+.. automodule:: final_project.pertub
+    :members:
+
 .. automodule:: final_project.model
+    :members:
+
+.. automodule:: final_project.protocols
+    :members:
+
+.. automodule:: final_project.app
     :members:
