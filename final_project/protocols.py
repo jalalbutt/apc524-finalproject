@@ -5,6 +5,9 @@ import numpy as np
 
 class ArrayModifier(typing.Protocol):
     """
+
+    THIS DOCSTRING NEEDS UPDATING
+
     A class that takes the dimensions of a 2D array as inputs,
     plus other params, and contains a method called "solve" that
     returns a 3 dimensional numpy array (m x n x t).
@@ -42,13 +45,12 @@ class ArrayModifier(typing.Protocol):
     n: int
     L_m: float
     L_n: float
-    source_indices: list
-    source_type: str
-    solve_type: str
-    timesteps: list
-    source_radius: float
+    f_type: str
+    source_center: list
+    radius: float
     source_strength: float
+    source_center_basis: float
 
     @abstractmethod
-    def solve(self) -> np.ndarray:
+    def solve(self, timesteps: list, method: str) -> np.ndarray:
         ...

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import xarray as xr
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import typing
 import optimization
 import perturb
@@ -37,6 +37,7 @@ class NetworkModel:
     lat_bounds_distance: float
     lon_bounds_distance: float
     source_radius: float
+    source_strength: float
     max_impact_threshold: float
 
     # default inputs that are not likely to change
@@ -46,12 +47,14 @@ class NetworkModel:
     nse_cost: float = 1000
     source_type: str = "delta"
     solve_type: str = "static"
-    timesteps: list = [
-        0,
-        1,
-    ]
+    timesteps: list = field(
+        default_factory=lambda: [
+            0,
+            1,
+        ]
+    )
     # times at which to run the optimization, after initialization
-    times_opt: list = [1]
+    times_opt: list = field(default_factory=lambda: [1])
 
     # # outputs- not meant to be inputted
     out_array_result: typing.Optional[xr.DataArray] = None
@@ -113,27 +116,27 @@ class NetworkModel:
             n=self.num_lon_gridpoints,
             L_m=self.lat_bounds_distance,
             L_n=self.lon_bounds_distance,
-            source_indices=[source_coord_m, source_coord_n],
-            source_type=self.source_type,
-            solve_type=self.solve_type,
-            timesteps=self.timesteps,
-            source_radius=self.source_radius,
+            f_type=self.source_type,
+            source_center=[source_coord_m, source_coord_n],
+            radius=self.source_radius,
             source_strength=self.source_strength,
         )
 
-        PDE_output_array = PDE_model.solve()
+        PDE_output_array = PDE_model.solve(
+            timesteps=self.timesteps, method="static_solve"
+        )
 
         # create out_array_result by adding coordinates
         self.out_array_result = xr.DataArray(
-            PDE_output_array,
-            dims=["lat", "lon", "time"],
-            coords=[lat, lon, time],
+            np.absolute(PDE_output_array[:, 1:-1, 1:-1]),
+            dims=["time", "lat", "lon"],
+            coords=[time, lat, lon],
         )
 
         # at desired timesteps of out_array_result, calculate impact on
         # optimization inputs, and run optimization
         for t in self.times_opt:
-            nodes_impact = nodes_p.copy(deep=True)
+            nodes_impact = self.nodes_p.copy(deep=True)
             nodes_impact["perturb_abs"] = 0
             nodes_impact["perturb_rel"] = 0
 
@@ -143,6 +146,7 @@ class NetworkModel:
                 perturb_val = self.out_array_result.sel(
                     lat=nodes_impact.loc[i, "lat"],
                     lon=nodes_impact.loc[i, "lon"],
+                    time=t,
                     method="nearest",
                 )
                 nodes_impact.loc[i, "perturb_abs"] = perturb_val
@@ -245,30 +249,32 @@ def test_network_model():
     num_lon_gridpoints = 100
     lat_bounds_distance = 3500  # km
     lon_bounds_distance = 3500  # km
-    source_radius = 100  # km
-    max_impact_threshold = 42
+    source_radius = lat_bounds_distance * 0.01
+    source_strength = 1000
+    max_impact_threshold = 10
 
     # initialize model
     model = NetworkModel(
-        A_p,
-        A_g,
-        generators,
-        lines,
-        load,
-        gas_supply,
-        gas_demand,
-        pipelines,
-        nodes_p,
-        nodes_g,
-        latlon_source,
-        lat_bounds,
-        lon_bounds,
-        num_lat_gridpoints,
-        num_lon_gridpoints,
-        lat_bounds_distance,
-        lon_bounds_distance,
-        source_radius,
-        max_impact_threshold,
+        A_p=A_p,
+        A_g=A_g,
+        generators=generators,
+        lines=lines,
+        load=load,
+        gas_supply=gas_supply,
+        gas_demand=gas_demand,
+        pipelines=pipelines,
+        nodes_p=nodes_p,
+        nodes_g=nodes_g,
+        latlon_source=latlon_source,
+        lat_bounds=lat_bounds,
+        lon_bounds=lon_bounds,
+        num_lat_gridpoints=num_lat_gridpoints,
+        num_lon_gridpoints=num_lon_gridpoints,
+        lat_bounds_distance=lat_bounds_distance,
+        lon_bounds_distance=lon_bounds_distance,
+        source_radius=source_radius,
+        source_strength=source_strength,
+        max_impact_threshold=max_impact_threshold,
     )
     model.run_simulation()
 
