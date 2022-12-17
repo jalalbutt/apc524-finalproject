@@ -133,6 +133,7 @@ def update_figure(submit, selected_timestep, lat, lon, radius):
     """
     Updates figure based on user input.
     """
+    print(float(lat), float(lon), float(radius))
 
     (
         array_result,
@@ -141,7 +142,7 @@ def update_figure(submit, selected_timestep, lat, lon, radius):
         A_g,
         nodes_p,
         nodes_g,
-    ) = model.test_network_model()
+    ) = model.run_model(float(lat), float(lon), float(radius))
 
     pertubation = (
         array_result.sel(time=selected_timestep)
@@ -164,7 +165,7 @@ def update_figure(submit, selected_timestep, lat, lon, radius):
         lat="lat",
         lon="lon",
         z="value",
-        radius=10,
+        radius=3,
         zoom=0,
         color_continuous_scale=px.colors.diverging.RdGy,
         mapbox_style="stamen-terrain",
@@ -192,7 +193,7 @@ def update_figure(submit, selected_timestep, lat, lon, radius):
         "coloraxis": "coloraxis2",
         "opacity": 1,
         "sizemode": "area",
-        "sizeref": 0.01,
+        "sizeref": 0.1,
         "autocolorscale": False,
         "size": nodemaster_p["load"],
     }

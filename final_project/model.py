@@ -240,7 +240,7 @@ def run_model(
         index=pd.Index(np.arange(A_p.shape[0]), name="node")
     )
     nodes_p["lat"] = [30, 35, 40]
-    nodes_p["lon"] = [75, 80, 85]
+    nodes_p["lon"] = [-75, -80, -85]
 
     nodes_g = nodes_p.copy(deep=True)
 
