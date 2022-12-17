@@ -266,8 +266,8 @@ def run_model(
 
 
 if __name__ == "__main__":
-    lat = 18.5
-    lon = -124
+    lat = 40.34578
+    lon = -74.65256
     radius = 35
     ar, a, b, c, d, e = run_model(lat, lon, radius)
     print("")
