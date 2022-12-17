@@ -1,12 +1,10 @@
 import numpy as np
 import pandas as pd
 import xarray as xr
-from dataclasses import dataclass
-
-# import typing
+from dataclasses import dataclass, field
+import typing
 import optimization
-
-# import perturb  # does not exist yet
+import perturb
 
 
 @dataclass
@@ -30,24 +28,37 @@ class NetworkModel:
     nodes_p: pd.DataFrame
     nodes_g: pd.DataFrame
 
-    # times at which to run the optimization, after initialization
-    times_opt: list
-
     # PDE params
-    array_PDE: xr.DataArray
-    latlon_start: list
-    timesteps: list  # could be in a different form
-    # add other PDE params
+    latlon_source: list
+    lat_bounds: list
+    lon_bounds: list
+    num_lat_gridpoints: int
+    num_lon_gridpoints: int
+    lat_bounds_distance: float
+    lon_bounds_distance: float
+    source_radius: float
+    source_strength: float
+    max_impact_threshold: float
 
     # default inputs that are not likely to change
     p_hat_mw: float = 100
     voltage_angle_cap_radians: float = 2 * np.pi
     slack_node_index: int = 0
     nse_cost: float = 1000
+    source_type: str = "delta"
+    solve_type: str = "static"
+    timesteps: list = field(
+        default_factory=lambda: [
+            0,
+            1,
+        ]
+    )
+    # times at which to run the optimization, after initialization
+    times_opt: list = field(default_factory=lambda: [1])
 
     # # outputs- not meant to be inputted
-    # out_array_result: typing.optional(xr.DataArray) = None
-    # out_opt_result: typing.optional(dict) = None
+    out_array_result: typing.Optional[xr.DataArray] = None
+    out_opt_result: typing.Optional[dict] = None
 
     def __post_init__(self):
         """
@@ -82,28 +93,105 @@ class NetworkModel:
         optimization for the desired time steps.
         """
 
-        # PDE_input_array = self.array_PDE.values
+        # Run PerturbedNetwork
 
-        # # get coordinate closest to latlon_start
-        # coordinate_start = [5, 5]
+        # get coordinates of source in array space
 
-        # PDE_model = perturb.Model(
-        #     PDE_input_array, coordinate_start, self.timesteps
-        # )
+        # first, get coordinates of eventual output
+        lat = np.linspace(
+            self.lat_bounds[0], self.lat_bounds[1], self.num_lat_gridpoints
+        )
+        lon = np.linspace(
+            self.lon_bounds[0], self.lon_bounds[1], self.num_lon_gridpoints
+        )
+        time = np.array(self.timesteps)
 
-        # PDE_model.simulate()
+        # now, get the coordinates of the source in m,n space
+        source_coord_m = np.absolute(lat - self.latlon_source[0]).argmin()
+        source_coord_n = np.absolute(lat - self.latlon_source[0]).argmin()
 
-        # PDE_output_array = PDE_model.out_array
+        # this can be anything which follows the ArrayModifier protocol
+        PDE_model = perturb.PerturbedNetwork(
+            m=self.num_lat_gridpoints,
+            n=self.num_lon_gridpoints,
+            L_m=self.lat_bounds_distance,
+            L_n=self.lon_bounds_distance,
+            f_type=self.source_type,
+            source_center=[source_coord_m, source_coord_n],
+            radius=self.source_radius,
+            source_strength=self.source_strength,
+        )
 
-        # # create out_array_result by adding coordinates
-        # self.out_array_result = xr.DataArray(PDE_output_array)
+        PDE_output_array = PDE_model.solve(
+            timesteps=self.timesteps, method="static_solve"
+        )
 
-        # # at desired timesteps of out_array_result, calculate impact on
-        # # optimization inputs, and run optimization
+        # create out_array_result by adding coordinates
+        self.out_array_result = xr.DataArray(
+            np.absolute(PDE_output_array[:, 1:-1, 1:-1]),
+            dims=["time", "lat", "lon"],
+            coords=[time, lat, lon],
+        )
+
+        # at desired timesteps of out_array_result, calculate impact on
+        # optimization inputs, and run optimization
+        for t in self.times_opt:
+            nodes_impact = self.nodes_p.copy(deep=True)
+            nodes_impact["perturb_abs"] = 0
+            nodes_impact["perturb_rel"] = 0
+
+            # for each node, calculate gen_multiplier, as 1 minus
+            # the ratio between the perturbation value and the threshold.
+            for i in nodes_impact.index:
+                perturb_val = self.out_array_result.sel(
+                    lat=nodes_impact.loc[i, "lat"],
+                    lon=nodes_impact.loc[i, "lon"],
+                    time=t,
+                    method="nearest",
+                )
+                nodes_impact.loc[i, "perturb_abs"] = perturb_val
+                nodes_impact.loc[i, "gen_multiplier"] = 1 - (
+                    perturb_val / self.max_impact_threshold
+                )
+
+            # perturb available generation for each generator
+            # according to the gen_multiplier.
+            generators_perturb = self.generators.copy(deep=True)
+            for i in generators_perturb.index:
+                generators_perturb.loc[i, "max_cap_mw"] = (
+                    generators_perturb.loc[i, "max_cap_mw"]
+                    * nodes_impact.loc[
+                        generators_perturb.loc[i, "node_p"], "gen_multiplier"
+                    ]
+                )
+
+            # optimize the perturbed network.
+            network_perturbed = optimization.OptimizedNetwork(
+                self.A_p,
+                self.A_g,
+                generators_perturb,
+                self.lines,
+                self.load,
+                self.gas_supply,
+                self.gas_demand,
+                self.pipelines,
+                self.p_hat_mw,
+                self.voltage_angle_cap_radians,
+                self.slack_node_index,
+                self.nse_cost,
+            )
+            network_perturbed.optimize()
+
+            # record results
+            self.out_opt_result[t] = network_perturbed.out_energy_and_flows
 
 
-def test_network_model():
-    """currently returns the fake outputs"""
+def run_model(
+    lat: float, lon: float, radius: float
+) -> typing.Tuple[
+    xr.DataArray, dict, np.ndarray, np.ndarray, pd.Series, pd.Series
+]:
+    """Run the model."""
 
     # optimization network characteristics
 
@@ -151,86 +239,61 @@ def test_network_model():
     nodes_p = pd.DataFrame(
         index=pd.Index(np.arange(A_p.shape[0]), name="node")
     )
-    nodes_p["lat"] = [30, 38, 40]
-    nodes_p["lon"] = [-75, -80, -95]
+    nodes_p["lat"] = [30, 35, 40]
+    nodes_p["lon"] = [75, 80, 85]
 
     nodes_g = nodes_p.copy(deep=True)
 
     # inputs for PDE
 
-    # initial array
-    lat = np.linspace(25, 45, 10)
-    lon = np.linspace(-70, -120, 10)
-    init_array_PDE = np.zeros([10, 10])
-    array_PDE = xr.DataArray(
-        init_array_PDE, coords=[lat, lon], dims=["lat", "lon"]
-    )
-
-    # params for PDE go here
-    # start of the disturbance
-    times_opt = [1, 2, 3, 4, 5]
-    latlon_start = [45, 85]
-    timesteps = [0, 1]
-    # other stuff- time, params, etc
+    latlon_source = [lat, lon]
+    lat_bounds = [18, 52]
+    lon_bounds = [-125, -64]
+    num_lat_gridpoints = 100
+    num_lon_gridpoints = 100
+    lat_bounds_distance = 3500  # km
+    lon_bounds_distance = 3500  # km
+    source_radius = radius
+    source_strength = 1000
+    max_impact_threshold = 1000000
 
     # initialize model
     model = NetworkModel(
-        A_p,
-        A_g,
-        generators,
-        lines,
-        load,
-        gas_supply,
-        gas_demand,
-        pipelines,
-        nodes_p,
-        nodes_g,
-        times_opt,
-        array_PDE,
-        latlon_start,
-        timesteps,
+        A_p=A_p,
+        A_g=A_g,
+        generators=generators,
+        lines=lines,
+        load=load,
+        gas_supply=gas_supply,
+        gas_demand=gas_demand,
+        pipelines=pipelines,
+        nodes_p=nodes_p,
+        nodes_g=nodes_g,
+        latlon_source=latlon_source,
+        lat_bounds=lat_bounds,
+        lon_bounds=lon_bounds,
+        num_lat_gridpoints=num_lat_gridpoints,
+        num_lon_gridpoints=num_lon_gridpoints,
+        lat_bounds_distance=lat_bounds_distance,
+        lon_bounds_distance=lon_bounds_distance,
+        source_radius=source_radius,
+        source_strength=source_strength,
+        max_impact_threshold=max_impact_threshold,
     )
     model.run_simulation()
 
-    # fake results that show what the format should be
-    array_result = xr.DataArray(
-        np.random.rand(10, 10, 2),
-        coords=[lat, lon, [0, 1]],
-        dims=["lat", "lon", "time"],
-    )
-    results_dict = {
-        "nse_power": pd.DataFrame(
-            {"non_served_energy": [0, 1, 2], "load": [2, 3, 5]},
-            index=pd.Index([0, 1, 2], name="node"),
-        ),
-        "nse_gas": pd.DataFrame(
-            {"non_served_energy": [0, 1, 2], "load": [2, 2, 2]},
-            index=pd.Index([0, 1, 2], name="node"),
-        ),
-        "flow_power": pd.Series(
-            [5, 6, 7],
-            index=pd.Index([0, 1, 2], name="edge"),
-            name="Power flow by line (MW)",
-        ),
-        "flow_gas": pd.Series(
-            [5, 6, 7],
-            index=pd.Index([0, 1, 2], name="edge"),
-            name="Power flow by line (MW)",
-        ),
-    }
-    opt_result = {0: results_dict, 1: results_dict}
-
     # our results are:
-    # array_result: self-described dimensions
+    # array_result: self-described dimensions (in xarray)
     # opt_result: dictionary, keys are time steps that optimization is run
     # for. values are each a dict containing the data for each time step.
     # A_p and A_g: arrays with edge-node incidence matrix (fine to focus
     # on power network) nodes_p and nodes_g: DFs with coordinates of the
-    # nodes for the gas and power network (fine to focus on power network)
-    return array_result, opt_result, A_p, A_g, nodes_p, nodes_g
-
-
-if __name__ == "__main__":
-    array_result, opt_result, A_p, A_g, nodes_p, nodes_g = test_network_model()
-
-    print("")
+    # nodes for the gas and power network
+    return (
+        model.out_array_result,
+        model.out_opt_result,
+        model.A_p,
+        model.A_g,
+        model.nodes_p,
+        model.nodes_g,
+    )

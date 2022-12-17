@@ -1,3 +1,8 @@
+# Local folders and files:
+Results/
+final_project/untitled.py
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
