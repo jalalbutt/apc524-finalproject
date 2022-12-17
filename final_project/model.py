@@ -221,7 +221,7 @@ def run_model(
     lon_bounds_distance = 3500  # km
     source_radius = radius
     source_strength = 1000
-    max_impact_threshold = 1000000
+    max_impact_threshold = 10000000000
 
     # initialize model
     model = NetworkModel(
