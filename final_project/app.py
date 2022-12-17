@@ -168,10 +168,10 @@ def update_figure(submit, selected_timestep, lat, lon, radius):
         radius=3,
         zoom=0,
         color_continuous_scale=px.colors.diverging.RdGy,
-        range_color=(1, pertubation["value"].max() + 1.1),
+        range_color=(500000, pertubation["value"].max() + 600000),
         mapbox_style="stamen-terrain",
     )
-    fig.update_layout(coloraxis_colorbar_title_text="Value")
+    fig.update_layout(coloraxis_colorbar_title_text="Pertubation")
 
     fig2 = px.scatter_mapbox(
         nodemaster_p,
@@ -180,7 +180,8 @@ def update_figure(submit, selected_timestep, lat, lon, radius):
         hover_name="index",
         hover_data=["non_served_energy", "load"],
         color="relative_service",
-        color_continuous_scale="Viridis",  # range_color=(0, 20),
+        color_continuous_scale="Viridis",
+        range_color=(0, 1.01),
         zoom=3,
         height=400,
     )

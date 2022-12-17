@@ -219,7 +219,7 @@ def run_model(
 
     load = pd.DataFrame()
     load["node"] = [0, 1, 2]
-    load["load_mw"] = [0, 0, 40]
+    load["load_mw"] = [20, 20, 40]
 
     gas_supply = pd.DataFrame()
     gas_supply["node_g"] = [0, 1, 2]
