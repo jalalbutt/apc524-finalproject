@@ -63,6 +63,7 @@ exclude_lines = [
 
 [project.optional-dependencies]
 test = [
+  "xarray", "matplotlib",
   "pytest >= 6.0.0",
   "uncertainties >= 3.1.7"
 ]
@@ -71,6 +72,7 @@ docs = [
     "myst_parser >=0.13",  # Markdown
     "sphinx >=4.0",
     "sphinx_copybutton",  # Easy code copy button
+    "matplotlib", "xarray", "dash",
 ]
 
 [tool.pytest.ini_options]
