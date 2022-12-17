@@ -1,5 +1,13 @@
 dash
-dash-bootstrap-components
 plotly
 pandas
 numpy
+xarray
+dataclasses
+typing
+pathlib
+abc
+cvxpy
+scipy
+traceback
+warnings
