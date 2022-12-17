@@ -215,8 +215,8 @@ def run_model(
     latlon_source = [lat, lon]
     lat_bounds = [18, 52]
     lon_bounds = [-125, -64]
-    num_lat_gridpoints = 100
-    num_lon_gridpoints = 100
+    num_lat_gridpoints = 300
+    num_lon_gridpoints = 300
     lat_bounds_distance = 3500  # km
     lon_bounds_distance = 3500  # km
     source_radius = radius

@@ -1,4 +1,5 @@
-# APC 524 - Final project
+# InfraRAPS
+## APC 524 - Final project
 
 **Authors**
 Jalal Butt, Gabriel Mantegna, Manuel Kreutle
@@ -25,7 +26,7 @@ If you want to display the Dash app locally, make sure you have all required pac
 
 Run the Dash app:
 
-`python3 final-project/dash/app.py`
+`python3 final-project/app.py`
 
 Results are then visible with a browser via http://127.0.0.1:8050/.
 
