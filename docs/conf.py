@@ -9,7 +9,7 @@
 project = "finalproject"
 copyright = "2022, Jalaluddin Butt, Gabriel Mantegna, Manuel Kreutle"
 author = "Jalaluddin Butt, Gabriel Mantegna, Manuel Kreutle"
-release = "0.1"
+release = "0.2"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -25,6 +25,8 @@ extensions = [
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+
+autodoc_mock_imports = ["matplotlib", "xarray", "dash"]
 
 
 # -- Options for HTML output -------------------------------------------------

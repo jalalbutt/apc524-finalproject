@@ -1,13 +1,12 @@
 """
 perturb.py
---------
+----------
 Module file handling the perturbation network
 
 Outputs:
---------
-    - time-evolution of perturbation
-        --> entirely independent of what's happening on the grid. I.e.,
-            need not output individual time-steps
+    time-evolution of perturbation :
+    --> entirely independent of what's happening on the grid. I.e.,
+        need not output individual time-steps
 """
 
 
@@ -29,53 +28,47 @@ class PerturbedNetwork:
     """
     Class for the perturbation network model.
 
-    Inputs:
-    ------
-                    f_type :   forcing function type (from a finite set)
-                    m      :   # of grid points
-                    radius :   perturbation extent in terms of grid [points]
-                    source_center :   coordinate pair; % of (L_m, L_n)
-                        (not indices)
+    Args;
+        f_type :   forcing function type (from a finite set)
+        m      :   # of grid points
+        radius :   perturbation extent in terms of grid [points]
+        source_center :   coordinate pair; % of (L_m, L_n)
+            (not indices)
 
 
     Outputs:
-    -------
-                    U :   np.array (2D if len(timesteps)== 1); 3D if > 1)
+        U :   np.array (2D if len(timesteps)== 1); 3D if > 1)
 
     Methods:
-    --------
-                    construct_A:   construct the spatial operator
-                    construct_source:   construct perturb source (several
-                        options)
-                    solve_laplacian_system:   numerically solve laplacian
-                    compute_discretization_error:   <only valid for an
-                                                    analytic RHS>
-                    plot_solution:   plot the solution
-                    plot_error:    plot the error
-
-                    static_solve:   compute the time-independent solution
+        construct_A:   construct the spatial operator
+        construct_source:   construct perturb source (several
+            options)
+        solve_laplacian_system:   numerically solve laplacian
+        compute_discretization_error:   <only valid for an
+            analytic RHS>
+        plot_solution:   plot the solution
+        plot_error:    plot the error
+        static_solve:   compute the time-independent solution
 
 
-    Usage:
-    -----
     Example:
-                    m = 100 # number of grid-points
-                    n = 100
-                    n = 100 #  currently not implemented
-                    L_m = 10
-                    L_n = 10
+        m = 100 # number of grid-points
+        n = 100
+        n = 100 #  currently not implemented
+        L_m = 10
+        L_n = 10
 
-                    f_type = 'oscillatory'
-                    f_type = 'delta'
-                    source_center=  = ()
-                    source_strength = 1000
-                    radius = m/L_m* 0.1
+        f_type = 'oscillatory'
+        f_type = 'delta'
+        source_center=  = ()
+        source_strength = 1000
+        radius = m/L_m* 0.1
 
-                    pertNet2 = PerturbedNetwork(f_type= f_type,
-                                source_point= source_center,
-                                m= m, L_m= L_m, L_n= L_n, radius= radius)
-                    U = pertNet2.static_solve()
-                    pertNet2.plot_solution()
+        pertNet2 = PerturbedNetwork(f_type= f_type,
+            source_point= source_center,
+            m= m, L_m= L_m, L_n= L_n, radius= radius)
+        U = pertNet2.static_solve()
+        pertNet2.plot_solution()
 
 
     """
@@ -140,18 +133,15 @@ class PerturbedNetwork:
         """
         Construct the 5-point Laplacian operator.
 
-        Inputs:
-        ------
-        m [int]
-        delta_x [float] : spatial-spacing
+        Args:
+            m [int]
+            delta_x [float] : spatial-spacing
 
         Outputs:
-        -------
-        A [sparse obj] : 2D 5-point Laplacian operator
+            A [sparse obj] : 2D 5-point Laplacian operator
 
         Improvements TBD:
-        ----------------
-        [] Square grid --> rectangular grid
+            [] Square grid --> rectangular grid
         """
         e = np.ones(m)
         T = sparse.spdiags([e, -4.0 * e, e], [-1, 0, 1], m, m)
@@ -178,20 +168,18 @@ class PerturbedNetwork:
         """
         Construct source (i.e. bomb source)
 
-        Inputs:
-        ------
-        x, y [np.array]  : x and y arrays, to be put into mesh form
-        f_type [str]     : forcing-function type (oscillatory, localized,
-                            etc.)
-                        - oscillatory could correspond to a heat-wave.
-        source_point     :
-        source_strength  :
-        radius :
+        Args:
+            x, y [np.array]  : x and y arrays, to be put into mesh form
+            f_type [str]     : forcing-function type (oscillatory, localized,
+                                etc.)
+                            - oscillatory could correspond to a heat-wave.
+            source_point     :
+            source_strength  :
+            radius :
 
         Outputs:
-        -------
-        X, Y [np.array, [len(x) x len(y)]] : x,y mesh
-        f [np.array, [len(x) x len(y)] ]   : discrete forcing function
+            X, Y [np.array, [len(x) x len(y)]] : x,y mesh
+            f [np.array, [len(x) x len(y)] ]   : discrete forcing function
 
         """
         X_source, Y_source = np.meshgrid(x[1:-1], y[1:-1])
@@ -221,15 +209,13 @@ class PerturbedNetwork:
         """
         Solve the Poisson eq. w/ the respective forcing-function.
 
-        Inputs:
-        -------
-        m : # points
-        A : discretized laplacian
-        f : forcing function
+        Args:
+            m : # points
+            A : discretized laplacian
+            f : forcing function
 
         Outputs:
-        -------
-        U [np.array]  : heat-kernel
+            U [np.array]  : heat-kernel
         """
         U = np.zeros((m + 2, m + 2))  # m+2 to accommodate the BCs
         U[1:-1, 1:-1] = linalg.spsolve(
@@ -242,16 +228,14 @@ class PerturbedNetwork:
         """
         Forward time-step on the perturbation equation.
 
-        Inputs:
-        ------
-                        U :   previous timestep solution
-                        A :   discretized laplacian system
-                        f :   source
-                        method:   type of forward time-step
+        Args
+            U :   previous timestep solution
+            A :   discretized laplacian system
+            f :   source
+            method:   type of forward time-step
 
         Outputs:
-        -------
-                        U_new
+            U_new
         """
 
         if method == "forward euler":
@@ -276,16 +260,14 @@ class PerturbedNetwork:
 
         **Currently only works for the oscillatory solution**
 
-        Inputs:
-        -------
-        x,y [np.array, grid]  :
-        U [np.array, grid]    :
+        Args:
+            x,y [np.array, grid]  :
+            U [np.array, grid]    :
 
         Outputs:
-        -------
-        X,Y
-        norm_error
-        grid_error
+            X,Y
+            norm_error
+            grid_error
 
         """
         # Error
@@ -368,8 +350,7 @@ class PerturbedNetwork:
         Solution to the laplacian.
 
         Outputs:
-        -------
-        U
+            U
 
         """
         if self.failure:
@@ -406,13 +387,11 @@ class PerturbedNetwork:
         """
         Time-stepped solution of the diffusive-perturbation model.
 
-        Inputs:
-        ------
-                        k :   diffusion coefficient
+        Args:
+            k :   diffusion coefficient
 
         Outputs:
-        -------
-                        U_time :   [np.array (time, space1, space2)]
+            U_time :   [np.array (time, space1, space2)]
         """
         if self.failure:
             return print(self.intialization_failure_message)
