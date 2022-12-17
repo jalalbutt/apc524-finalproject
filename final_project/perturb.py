@@ -126,16 +126,10 @@ class PerturbedNetwork:
             ), "Source point must be coord. pair"
             assert self.m > 10, "Grid must be AT LEAST 10x10 points"
             assert self.n > 10, "Grid must be AT LEAST 10x10 points"
-            assert (
-                self.radius < 0.1 * self.L_m
-            ), "radius can't span >10% of grid"
             assert self.f_type in [
                 "delta",
                 "oscillatory",
             ], "Requested source-type is not yet configured."
-            assert (
-                self.radius > 0.6 * self.delta_x
-            ), "Source cannot be resolved on the grid due to small radius"
 
             # temporary restrictions
             assert (

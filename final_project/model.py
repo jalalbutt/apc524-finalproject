@@ -186,8 +186,12 @@ class NetworkModel:
             self.out_opt_result[t] = network_perturbed.out_energy_and_flows
 
 
-def test_network_model():
-    """Test the NetworkModel object."""
+def run_model(
+    lat: float, lon: float, radius: float
+) -> typing.Tuple[
+    xr.DataArray, dict, np.ndarray, np.ndarray, pd.Series, pd.Series
+]:
+    """Run the model."""
 
     # optimization network characteristics
 
@@ -242,16 +246,16 @@ def test_network_model():
 
     # inputs for PDE
 
-    latlon_source = [40.36, -74.66]  # Princeton, NJ
+    latlon_source = [lat, lon]
     lat_bounds = [18, 52]
     lon_bounds = [-125, -64]
     num_lat_gridpoints = 100
     num_lon_gridpoints = 100
     lat_bounds_distance = 3500  # km
     lon_bounds_distance = 3500  # km
-    source_radius = lat_bounds_distance * 0.01
+    source_radius = radius
     source_strength = 1000
-    max_impact_threshold = 10
+    max_impact_threshold = 1000000
 
     # initialize model
     model = NetworkModel(
@@ -293,9 +297,3 @@ def test_network_model():
         model.nodes_p,
         model.nodes_g,
     )
-
-
-if __name__ == "__main__":
-    array_result, opt_result, A_p, A_g, nodes_p, nodes_g = test_network_model()
-
-    print("")
