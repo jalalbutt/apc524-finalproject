@@ -44,7 +44,7 @@ Modules
 .. automodule:: final_project.optimization
     :members:
 
-.. automodule:: final_project.pertub
+.. automodule:: final_project.perturb
     :members:
 
 .. automodule:: final_project.model

@@ -1,15 +1,7 @@
 """
-APC 524
-Final Project
-Quantifying resilience of coupled networks
-
-@author Jalal Butt
-Date: 12-03-22
-
-
+perturb.py
+--------
 Module file handling the perturbation network
-----------------------------------------------
-
 
 Outputs:
 --------
