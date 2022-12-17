@@ -32,22 +32,6 @@ import traceback
 import warnings
 
 
-# Arb parameters for testing.
-"""
-m = 100 # number of grid-points
-n = 100
-n = 100 #  currently not implemented
-L_m = 10
-L_n = 10
-
-f_type = 'oscillatory'
-f_type = 'delta'
-source_point = (-2,-2)
-source_strength = 1000
-radius = 10
-"""
-
-
 @dataclass
 class PerturbedNetwork:
     """
@@ -105,17 +89,13 @@ class PerturbedNetwork:
     """
 
     # -- Inputs:
-    f_type: str
-    source_center: [
-        tuple,
-        list,
-        np.ndarray,
-    ]  # coordinate pair; % of (L_m, L_n)
     m: int
     n: int
     L_m: int
     L_n: int
-    radius_grid_fract: float = 0.01  # frac of grid pts (of the smaller dim.)
+    f_type: str
+    source_center: list
+    radius: float
     source_strength: float = 1000
     source_center_basis: str = "grid_index"  # expected pipeline input
 
@@ -123,7 +103,6 @@ class PerturbedNetwork:
         self.failure = False
         self.delta_x = self.L_m / (self.m + 1)
         self.delta_y = self.L_n / (self.n + 1)
-        self.radius = self.m / self.L_m * self.radius_grid_fract
         self.x = np.linspace(0, self.L_m, self.m + 2)
         self.y = np.linspace(0, self.L_n, self.n + 2)
 
@@ -147,16 +126,10 @@ class PerturbedNetwork:
             ), "Source point must be coord. pair"
             assert self.m > 10, "Grid must be AT LEAST 10x10 points"
             assert self.n > 10, "Grid must be AT LEAST 10x10 points"
-            assert (
-                self.radius < 0.1 * self.L_m
-            ), "radius can't span >10% of grid"
             assert self.f_type in [
                 "delta",
                 "oscillatory",
             ], "Requested source-type is not yet configured."
-            assert (
-                self.radius > 0.6 * self.delta_x
-            ), "Source cannot be resolved on the grid due to small radius"
 
             # temporary restrictions
             assert (
