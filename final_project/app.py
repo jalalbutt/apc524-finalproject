@@ -4,13 +4,24 @@ app.py
 The dash app of the project
 """
 
-from dash import Dash, dcc, html, Input, Output
+from dash import Dash, dcc, html, Input, Output, State
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 
 # import model to generate project data
 import model
+
+external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+
+app = Dash(__name__, external_stylesheets=external_stylesheets)
+
+gws = "graph-with-slider"
+
+logo_path = "assets/logo.jpeg"
+princeton_path = "assets/princeton.png"
+
+timesteps = pd.Series([0, 1])
 
 (
     array_result,
@@ -20,15 +31,6 @@ import model
     nodes_p,
     nodes_g,
 ) = model.test_network_model()
-
-logo_path = "assets/logo.jpeg"
-princeton_path = "assets/princeton.png"
-
-timesteps = pd.Series([0, 1])
-
-app = Dash(__name__)
-
-gws = "graph-with-slider"
 
 app.layout = html.Div(
     [
@@ -43,23 +45,104 @@ app.layout = html.Div(
         ),
         html.Img(src=logo_path, height=150),
         dcc.Graph(id=gws),
-        dcc.Slider(
-            timesteps.min(),
-            timesteps.max(),
-            step=None,
-            value=timesteps.min(),
-            marks={0: "Start", 1: "End"},
-            id="time-slider",
+        html.Div(
+            [
+                html.H3("Set temporal state", style={"textAlign": "center"}),
+                dcc.Slider(
+                    timesteps.min(),
+                    timesteps.max(),
+                    step=None,
+                    value=timesteps.min(),
+                    marks={0: "Init", 1: "Final"},
+                    id="time-slider",
+                ),
+            ],
+            style={
+                "padding-left": "37%",
+                "width": 500,
+            },
+        ),
+        html.Div(
+            [
+                html.Div(
+                    [
+                        html.H3("Set location of pertubation center"),
+                        html.Div(
+                            [
+                                "Latitude",
+                                dcc.Input(
+                                    id="input-lat",
+                                    type="text",
+                                    value="40.34578",
+                                    style={"float": "center"},
+                                ),
+                            ],
+                            style={"textAlign": "center"},
+                        ),
+                        html.Div(
+                            [
+                                "Longitude",
+                                dcc.Input(
+                                    id="input-lon",
+                                    type="text",
+                                    value="-74.65256",
+                                    style={"float": "center"},
+                                ),
+                            ],
+                            style={"textAlign": "center"},
+                        ),
+                    ],
+                    style={"textAlign": "center"},
+                ),
+                html.Div(
+                    [
+                        html.H3("Set radius of pertubation"),
+                        html.Div(
+                            [
+                                "Radius in km",
+                                dcc.Input(
+                                    id="input-blastradius",
+                                    type="text",
+                                    value="12",
+                                    style={"float": "center"},
+                                ),
+                            ],
+                            style={"textAlign": "center"},
+                        ),
+                    ],
+                    style={"textAlign": "center"},
+                ),
+                html.Div(
+                    [
+                        html.Button(
+                            id="submit-button-state",
+                            n_clicks=0,
+                            children="Submit",
+                        ),
+                    ],
+                    style={"textAlign": "center"},
+                ),
+                html.Div(id="output-state"),
+            ]
         ),
     ]
 )
 
 
-@app.callback(Output(gws, "figure"), Input("time-slider", "value"))
-def update_figure(selected_timestep):
+@app.callback(
+    Output(gws, "figure"),
+    Output("output-state", "children"),
+    Input("submit-button-state", "n_clicks"),
+    State("time-slider", "value"),
+    State("input-lat", "value"),
+    State("input-lon", "value"),
+    State("input-blastradius", "value"),
+)
+def update_figure(submit, selected_timestep, lat, lon, radius):
     """
     Updates figure based on user input.
     """
+
     pertubation = (
         array_result.sel(time=selected_timestep)
         .to_dataframe(name="value")
@@ -148,7 +231,17 @@ def update_figure(selected_timestep):
     )
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
 
-    return fig
+    return (
+        fig,
+        """
+        Lat: "{}",
+        Lon: "{}",
+        Radius: "{}",
+        Submit: "{}"
+        """.format(
+            lat, lon, radius, submit
+        ),
+    )
 
 
 if __name__ == "__main__":
