@@ -4,6 +4,8 @@
 **Authors**
 Jalal Butt, Gabriel Mantegna, Manuel Kreutle
 
+![alt text](https://github.com/jalalbutt/apc524-finalproject/blob/main/img/dash.png?raw=true)
+
 -----
 
 **Table of Contents**
