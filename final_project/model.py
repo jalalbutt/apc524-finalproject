@@ -105,16 +105,16 @@ class NetworkModel:
 
         # first, get coordinates of eventual output
         lat = np.linspace(
-            self.lat_bounds[0], self.lat_bounds[1], self.num_lat_gridpoints
+            max(self.lat_bounds), min(self.lat_bounds), self.num_lat_gridpoints
         )
         lon = np.linspace(
-            self.lon_bounds[0], self.lon_bounds[1], self.num_lon_gridpoints
+            min(self.lon_bounds), max(self.lon_bounds), self.num_lon_gridpoints
         )
         time = np.array(self.timesteps)
 
         # now, get the coordinates of the source in m,n space
         source_coord_m = np.absolute(lat - self.latlon_source[0]).argmin()
-        source_coord_n = np.absolute(lat - self.latlon_source[0]).argmin()
+        source_coord_n = np.absolute(lon - self.latlon_source[1]).argmin()
 
         # this can be anything which follows the ArrayModifier protocol
         PDE_model = perturb.PerturbedNetwork(
@@ -132,11 +132,14 @@ class NetworkModel:
             timesteps=self.timesteps, method="static_solve"
         )
 
+        array_record = np.absolute(PDE_output_array[:, 1:-1, 1:-1])
+        array_record = array_record / array_record.max()
+
         # create out_array_result by adding coordinates
         self.out_array_result = xr.DataArray(
-            np.absolute(PDE_output_array[:, 1:-1, 1:-1]),
+            array_record,
             dims=["time", "lat", "lon"],
-            coords=[time, lat[::-1], lon],
+            coords=[time, lat, lon],
         )
 
         # at desired timesteps of out_array_result, calculate impact on
@@ -156,9 +159,10 @@ class NetworkModel:
                     method="nearest",
                 )
                 nodes_impact.loc[i, "perturb_abs"] = perturb_val
-                nodes_impact.loc[i, "gen_multiplier"] = 1 - (
-                    perturb_val / self.max_impact_threshold
-                )
+                if perturb_val < 0.6:
+                    perturb_val = 0
+                gen_multiplier = 1 - (perturb_val / self.max_impact_threshold)
+                nodes_impact.loc[i, "gen_multiplier"] = gen_multiplier
 
             # perturb available generation for each generator
             # according to the gen_multiplier.
@@ -226,7 +230,7 @@ def run_model(
     lon_bounds_distance = 3500  # km
     source_radius = radius
     source_strength = 1000
-    max_impact_threshold = 10000000000
+    max_impact_threshold = 0.9
 
     # initialize model
     model = NetworkModel(
@@ -271,8 +275,8 @@ def run_model(
 
 
 if __name__ == "__main__":
-    lat = 40.34578
-    lon = -74.65256
+    lat = 40.346
+    lon = -74.65
     radius = 35
     ar, a, b, c, d, e = run_model(lat, lon, radius)
     print("")

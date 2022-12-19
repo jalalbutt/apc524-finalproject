@@ -11,6 +11,7 @@ import pandas as pd
 
 # import model to generate project data
 import model
+import xarray as xr
 
 external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
 
@@ -57,7 +58,7 @@ app.layout = html.Div(
             [
                 html.Div(
                     [
-                        html.H3("Set location of pertubation center"),
+                        html.H3("Set location of perturbation center"),
                         html.Div(
                             [
                                 "Latitude",
@@ -87,7 +88,7 @@ app.layout = html.Div(
                 ),
                 html.Div(
                     [
-                        html.H3("Set radius of pertubation"),
+                        html.H3("Set radius of perturbation"),
                         html.Div(
                             [
                                 "Radius in km",
@@ -133,7 +134,6 @@ def update_figure(submit, selected_timestep, lat, lon, radius):
     """
     Updates figure based on user input.
     """
-    print(float(lat), float(lon), float(radius))
 
     (
         array_result,
@@ -144,7 +144,12 @@ def update_figure(submit, selected_timestep, lat, lon, radius):
         nodes_g,
     ) = model.run_model(float(lat), float(lon), float(radius))
 
-    pertubation = (
+    # threshold array
+    array_result = xr.where(
+        array_result < array_result.max() * 0.5, 0, array_result
+    )
+
+    perturbation = (
         array_result.sel(time=selected_timestep)
         .to_dataframe(name="value")
         .reset_index()
@@ -158,20 +163,18 @@ def update_figure(submit, selected_timestep, lat, lon, radius):
     )
     nodemaster_p["index"] = nodemaster_p.index
 
-    flow_p = opt_result[selected_timestep]["flow_power"]
-
     fig = px.density_mapbox(
-        pertubation,
+        perturbation,
         lat="lat",
         lon="lon",
         z="value",
         radius=3,
         zoom=0,
         color_continuous_scale=px.colors.diverging.RdGy,
-        range_color=(500000, pertubation["value"].max() + 600000),
+        range_color=(0.5, 1.5),
         mapbox_style="stamen-terrain",
     )
-    fig.update_layout(coloraxis_colorbar_title_text="Pertubation")
+    fig.update_layout(coloraxis_colorbar_title_text="Perturb.")
 
     fig2 = px.scatter_mapbox(
         nodemaster_p,
@@ -180,12 +183,12 @@ def update_figure(submit, selected_timestep, lat, lon, radius):
         hover_name="index",
         hover_data=["non_served_energy", "load"],
         color="relative_service",
-        color_continuous_scale="Viridis",
+        color_continuous_scale="RdBu",
         range_color=(0, 1.01),
         zoom=3,
         height=400,
     )
-    fig2.update_layout(coloraxis_colorbar_title_text="Relative service")
+    fig2.update_layout(coloraxis_colorbar_title_text="Load")
 
     fig.add_trace(fig2.data[0])
     fig.layout.coloraxis2 = fig2.layout.coloraxis
@@ -195,7 +198,7 @@ def update_figure(submit, selected_timestep, lat, lon, radius):
         "coloraxis": "coloraxis2",
         "opacity": 1,
         "sizemode": "area",
-        "sizeref": 0.1,
+        "sizeref": 2 * nodemaster_p.load.max() / (40**2),
         "autocolorscale": False,
         "size": nodemaster_p["load"],
     }
@@ -203,8 +206,8 @@ def update_figure(submit, selected_timestep, lat, lon, radius):
     fig.layout.coloraxis2.colorbar.x = -0.07
     fig.layout.coloraxis.colorbar.x = -0.13
 
-    for i in range(len(A_p.T)):
-        for j in range(len(A_p.T[i])):
+    for i in range(A_p.T.shape[0]):
+        for j in range(A_p.T.shape[1]):
             if A_p.T[i][j] == 1:
                 start_index = j
                 start_node = nodemaster_p.iloc[start_index]
@@ -212,10 +215,6 @@ def update_figure(submit, selected_timestep, lat, lon, radius):
                 end_index = j
                 end_node = nodemaster_p.iloc[end_index]
         edge = pd.concat((start_node, end_node), axis=1).T
-        if flow_p[i]:
-            edge["flow"] = [flow_p[i], -flow_p[i]]
-        else:
-            edge["flow"] = [0, -0]
 
         fig.add_trace(
             go.Scattermapbox(
@@ -223,9 +222,6 @@ def update_figure(submit, selected_timestep, lat, lon, radius):
                 lon=edge["lon"],
                 mode="lines",
                 line={"color": "#000000"},
-                # text="Flow: " + str(flow_p[i])+" MW\n"
-                #     "Direction: "+str(start_index)+"->"+str(end_index),
-                # hoverinfo="text",
                 hoverinfo="skip",
             )
         )
@@ -235,7 +231,9 @@ def update_figure(submit, selected_timestep, lat, lon, radius):
         mapbox_zoom=3,
         mapbox_center={"lat": 37.0902, "lon": -95.7129},
     )
-    fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+    fig.update_layout(
+        margin={"r": 0, "t": 0, "l": 0, "b": 0}, showlegend=False
+    )
 
     return (
         fig,

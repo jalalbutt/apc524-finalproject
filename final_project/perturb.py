@@ -84,18 +84,19 @@ class PerturbedNetwork:
     source_strength: float = 1000
     source_center_basis: str = "grid_index"  # expected pipeline input
 
-    def __post_init__(self):  # what should i do w this? generate tests?
+    def __post_init__(self):
         self.failure = False
-        self.delta_x = self.L_m / (self.m + 1)
-        self.delta_y = self.L_n / (self.n + 1)
-        self.x = np.linspace(0, self.L_m, self.m + 2)
-        self.y = np.linspace(0, self.L_n, self.n + 2)
+        self.delta_x = self.L_n / (self.n + 1)
+        self.delta_y = self.L_m / (self.m + 1)
+        self.x = np.linspace(0, self.L_n, self.n + 2)
+        self.y = np.linspace(0, self.L_m, self.m + 2)
 
         # grid-choice for source center:
         if self.source_center_basis == "grid_index":  # need to translate;
+            # we are now in X-Y coordinates
             self.source_center = (
-                self.source_center[1] / self.m,
-                (self.m - 1 - self.source_center[0]) / self.n,
+                self.source_center[1] / self.n,
+                (self.m - 1 - self.source_center[0]) / self.m,
             )
         elif self.source_center_basis == "coordinate":  # good;
             self.source_center = (
@@ -173,7 +174,7 @@ class PerturbedNetwork:
             f_type [str]     : forcing-function type (oscillatory, localized,
                                 etc.)
                             - oscillatory could correspond to a heat-wave.
-            source_point     :
+            source_center     : source center in X-Y cartesian coordinates
             source_strength  :
             radius :
 
@@ -182,14 +183,14 @@ class PerturbedNetwork:
             f [np.array, [len(x) x len(y)] ]   : discrete forcing function
 
         """
-        X_source, Y_source = np.meshgrid(x[1:-1], y[1:-1])
+        Y_source, X_source = np.meshgrid(x[1:-1], y[1:-1])
 
         if f_type.lower() == "oscillatory":
             f = -2.0 * np.sin(X_source) * np.sin(Y_source)
         elif f_type.lower() == "delta":
             circle = np.sqrt(
-                (X_source - source_center[0] * self.L_m) ** 2
-                + (Y_source - source_center[1] * self.L_n) ** 2
+                (X_source - source_center[0] * self.L_n) ** 2
+                + (Y_source - source_center[1] * self.L_m) ** 2
             )
             # circle = np.sqrt(
             #     (X_source - source_center[1] * self.L_m) ** 2
@@ -277,8 +278,6 @@ class PerturbedNetwork:
         )
 
         grid_error = np.abs(U - np.sin(X) * np.sin(Y))
-
-        print("Normalization error" + str(norm_error))
 
         return X, Y, norm_error, grid_error
 
@@ -375,6 +374,9 @@ class PerturbedNetwork:
             self.norm_error,
             self.grid_error,
         ) = self.compute_discretization_error(self.x, self.y, self.U)
+
+        # convert back to matrix coordinates
+        self.U = np.flip(self.U.transpose(), axis=0)
 
         # first output is for infrastr network initialization,
         # second is first solution
