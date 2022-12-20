@@ -5,6 +5,6 @@
 
 * First code.
 
-## Version 0.2:
+## Version 0.2: final submission
 
-* corrected syntax error in ci.yml
+* Added all modules, tests and CI
