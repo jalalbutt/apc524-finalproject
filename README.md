@@ -1,6 +1,6 @@
 # InfraRAPS
 
-[![CI](https://github.com/jalalbutt/apc524-finalproject/actions/workflows/ci.yml/badge.svg)](https://github.com/jalalbutt/apc524-finalproject/actions/workflows/ci.yml)
+[![.github/workflows/ci.yml](https://github.com/jalalbutt/apc524-finalproject/actions/workflows/ci.yml/badge.svg)](https://github.com/jalalbutt/apc524-finalproject/actions/workflows/ci.yml) [![pages-build-deployment](https://github.com/jalalbutt/apc524-finalproject/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/jalalbutt/apc524-finalproject/actions/workflows/pages/pages-build-deployment)
 
 ## APC 524 - Final project
 
