@@ -50,7 +50,7 @@ app.layout = html.Div(
                 ),
             ],
             style={
-                "padding-left": "37%",
+                "padding-left": "33%",
                 "width": 500,
             },
         ),
@@ -111,6 +111,7 @@ app.layout = html.Div(
                             n_clicks=0,
                             children="Submit",
                         ),
+                        html.H3("Please note, calculation takes about 10-20s"),
                     ],
                     style={"textAlign": "center"},
                 ),

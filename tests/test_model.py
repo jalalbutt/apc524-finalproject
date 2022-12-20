@@ -68,7 +68,7 @@ def test_network_model():
     lon_bounds_distance = 3500  # km
     source_radius = lat_bounds_distance * 0.01
     source_strength = 1000
-    max_impact_threshold = 1000000
+    max_impact_threshold = 0.9
 
     # initialize model
     model = NetworkModel(
@@ -95,4 +95,6 @@ def test_network_model():
     )
     model.run_simulation()
 
-    assert (abs(model.out_array_result.values[1][0][0] - 380.56459)) < 0.01
+    assert (
+        abs(model.out_array_result.values[1][50][-10] - 0.1338398663729742)
+    ) < 0.01

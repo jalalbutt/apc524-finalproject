@@ -2,22 +2,12 @@
 perturb.py
 ----------
 Module file handling the perturbation network
-
-Outputs:
-    time-evolution of perturbation :
-    --> entirely independent of what's happening on the grid. I.e.,
-        need not output individual time-steps
 """
 
-
-# (Elliptic Equations hw)
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.sparse as sparse
 import scipy.sparse.linalg as linalg
-
-# from scipy import signal
-
 from dataclasses import dataclass
 import traceback
 import warnings
