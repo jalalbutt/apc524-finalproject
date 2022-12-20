@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "finalproject"
+project = "InfraRAPS"
 copyright = "2022, Jalaluddin Butt, Gabriel Mantegna, Manuel Kreutle"
 author = "Jalaluddin Butt, Gabriel Mantegna, Manuel Kreutle"
 release = "0.2"
