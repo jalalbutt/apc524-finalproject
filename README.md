@@ -2,10 +2,9 @@
 
 [![.github/workflows/ci.yml](https://github.com/jalalbutt/apc524-finalproject/actions/workflows/ci.yml/badge.svg)](https://github.com/jalalbutt/apc524-finalproject/actions/workflows/ci.yml) [![pages-build-deployment](https://github.com/jalalbutt/apc524-finalproject/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/jalalbutt/apc524-finalproject/actions/workflows/pages/pages-build-deployment) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## APC 524 - Final project
-
 **Authors**
 Jalal Butt, Gabriel Mantegna, Manuel Kreutle
+APC 524
 
 ![alt text](https://github.com/jalalbutt/apc524-finalproject/blob/main/img/dash.png?raw=true)
 
