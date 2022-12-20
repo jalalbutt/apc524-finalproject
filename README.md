@@ -22,11 +22,7 @@ Make sure you have all required packages installed:
 
 ## Results
 
-The results were visualized with Dash and can be found online under:
-
-https://manuelk.pythonanywhere.com/
-
-Local display: If you want to display the Dash app locally, run the Dash app via:
+The results were visualized with Dash and can be displayed locally. Run the Dash app via:
 
 `python3 final-project/app.py`
 
