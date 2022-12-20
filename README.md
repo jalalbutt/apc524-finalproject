@@ -1,6 +1,6 @@
 # InfraRAPS
 
-![example workflow](https://github.com/jalalbutt/apc524-finalproject/blob/main/.github/workflows/ci.yml/badge.svg)
+[![.github/workflows/ci.yml](https://github.com/jalalbutt/apc524-finalproject/actions/workflows/ci.yml/badge.svg)](https://github.com/jalalbutt/apc524-finalproject/actions/workflows/ci.yml)
 
 ## APC 524 - Final project
 
